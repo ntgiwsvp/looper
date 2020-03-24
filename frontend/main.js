@@ -15,9 +15,10 @@ function startStream()
 {
   console.log("Getting user media.");
   //navigator.mediaDevices.getUserMedia({audio: true}).then(startRecording).catch(console.log);
-  navigator.mediaDevices.getUserMedia({audio: true}).
-    then(startCall).
-    catch((err) => console.error(err));
+  navigator.mediaDevices
+    .getUserMedia({audio: true})
+    .then(startCall)
+    .catch((err) => console.error(err));
 }
 
 function startCall(stream)
@@ -32,9 +33,10 @@ function startCall(stream)
   connection.addStream(stream);
 
   console.log("Creating offer.")
-  connection.createOffer({voiceActivityDetection: false}).
-    then(setLocalDescription).
-    catch((err) => console.error(err));
+  connection
+    .createOffer({voiceActivityDetection: false})
+    .then(setLocalDescription)
+    .catch((err) => console.error(err));
 
   // REMOTE CONNECTION IS FAKE, JUST FOR TESTING PURPOSES.  THIS WILL BE ON THE SERVER
 
@@ -98,36 +100,41 @@ function gotRemoteMediaStream(event)
 function setLocalDescription(description)
 {
   console.log("Setting local description.");
-  connection.setLocalDescription(description).
-    then(() => console.log("Local description set.")).
-    catch((err) => console.error(err));
+  connection
+    .setLocalDescription(description)
+    .then(() => console.log("Local description set."))
+    .catch((err) => console.error(err));
 
   // REMOTE CONNECTION IS FAKE, JUST FOR TESTING PURPOSES.  THIS WILL BE ON THE SERVER
 
   console.log("REMOTE: Setting remote description.");
-  remoteConnection.setRemoteDescription(description).
-    then(() => console.log("REMOTE: Remote description set.")).
-    catch((err) => console.error(err));
+  remoteConnection
+    .setRemoteDescription(description)
+    .then(() => console.log("REMOTE: Remote description set."))
+    .catch((err) => console.error(err));
 
   console.log("REMOTE: Creating answer.");
-  remoteConnection.createAnswer().
-    then(createdAnswer).
-    catch((err) => console.error(err));
+  remoteConnection
+    .createAnswer()
+    .then(createdAnswer)
+    .catch((err) => console.error(err));
 }
 
 function createdAnswer(description)
 {
   console.log("REMOTE: Setting local description.")
-  remoteConnection.setLocalDescription(description).
-    then(() => console.log("REMOTE: Local description set.")).
-    catch((err) => console.error(err));
+  remoteConnection
+    .setLocalDescription(description)
+    .then(() => console.log("REMOTE: Local description set."))
+    .catch((err) => console.error(err));
 
   // CONNECTIION IS FAKE, JUST FOR TESTING PURPOSES.  THIS WILL BE ON THE CLIENT
 
   console.log("Setting remote description.")
-  connection.setRemoteDescription(description).
-    then(() => console.log("Remote description set.")).
-    catch((err) => console.error(err));
+  connection
+    .setRemoteDescription(description)
+    .then(() => console.log("Remote description set."))
+    .catch((err) => console.error(err));
 }
 
 //----------------------------------------
