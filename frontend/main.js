@@ -25,8 +25,8 @@ function startCall(stream)
   console.log("Creating connection.")
   connection = new RTCPeerConnection();
 
-  // connection.addEventListener('icecandidate', XXX);
-  // connection.addEventListener('iceconnectionstatechange', XXX);
+  connection.addEventListener('icecandidate', handleConnection);
+  connection.addEventListener('iceconnectionstatechange', handleConnectionChange);
 
   console.log("Adding stream to connection.");
   connection.addStream(stream);
@@ -41,7 +41,58 @@ function startCall(stream)
   console.log("REMOTE: Creating connection.");
   remoteConnection = new RTCPeerConnection();
 
-  // event lisenters to be added here (three ones, in addition also addstream) XXX
+  remoteConnection.addEventListener('icecandidate', handleRemoteConnection);
+  remoteConnection.addEventListener('iceconnectionstatechange', handleRemoteConnectionChange);
+  remoteConnection.addEventListener('addstream', gotRemoteMediaStream);
+}
+
+function handleConnection(event)
+{
+  console.log("EVENT icecandidate()")
+
+  if (event.candidate)
+  {
+    remoteConnection  // FAKE
+      .addIceCandidate(new RTCIceCandidate(event.candidate))
+      .then(() => console.log("Connection successful."))
+      .catch(() => console.log("Connection failed"))
+  }
+  else
+  {
+    console.log("This handler not in the original code - ???")
+  }
+}
+
+function handleConnectionChange(event)
+{
+  console.log("EVENT iceconnectionstatechange")
+}
+
+function handleRemoteConnection(event)
+{
+  console.log("REMOTE EVENT icecandidate()")
+
+  if (event.candidate)
+  {
+    connection  // FAKE
+      .addIceCandidate(new RTCIceCandidate(event.candidate))
+      .then(() => console.log("REMOTE Connection successful."))
+      .catch(() => console.log("REMOTE Connection failed"))
+  }
+  else
+  {
+    console.log("This handler not in the original code - ???")
+  }
+}
+
+function handleRemoteConnectionChange(event)
+{
+  console.log("REMOTE EVENT iceconnectionstatechange")
+}
+
+function gotRemoteMediaStream(event)
+{
+  console.log("REMOTE EVENT addstream")
 }
 
 function setLocalDescription(description)
