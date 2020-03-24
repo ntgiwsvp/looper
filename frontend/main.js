@@ -1,6 +1,6 @@
 'use strict';
 
-var recorder, chunks, connection;
+var recorder, chunks, connection, remoteConnection;
 
 document.addEventListener("DOMContentLoaded", initDocument);
 
@@ -15,7 +15,9 @@ function startStream()
 {
   console.log("Getting user media.");
   //navigator.mediaDevices.getUserMedia({audio: true}).then(startRecording).catch(console.log);
-  navigator.mediaDevices.getUserMedia({audio: true}).then(startCall).catch(console.log);
+  navigator.mediaDevices.getUserMedia({audio: true}).
+    then(startCall).
+    catch((err) => console.error(err));
 }
 
 function startCall(stream)
@@ -26,22 +28,55 @@ function startCall(stream)
   // connection.addEventListener('icecandidate', XXX);
   // connection.addEventListener('iceconnectionstatechange', XXX);
 
-  console.log("Adding stream to connection.")
+  console.log("Adding stream to connection.");
   connection.addStream(stream);
 
   console.log("Creating offer.")
-  connection.createOffer({voiceActivityDetection: false}).then(setLocalDescription).catch(console.log);
+  connection.createOffer({voiceActivityDetection: false}).
+    then(setLocalDescription).
+    catch((err) => console.error(err));
+
+  // REMOTE CONNECTION IS FAKE, JUST FOR TESTING PURPOSES.  THIS WILL BE ON THE SERVER
+
+  console.log("REMOTE: Creating connection.");
+  remoteConnection = new RTCPeerConnection();
+
+  // event lisenters to be added here (three ones, in addition also addstream) XXX
 }
 
 function setLocalDescription(description)
 {
   console.log("Setting local description.");
-  connection.setLocalDescription(description).then(setLocalDescriptionSuccess).catch(console.log)
+  connection.setLocalDescription(description).
+    then(() => console.log("Local description set.")).
+    catch((err) => console.error(err));
+
+  // REMOTE CONNECTION IS FAKE, JUST FOR TESTING PURPOSES.  THIS WILL BE ON THE SERVER
+
+  console.log("REMOTE: Setting remote description.");
+  remoteConnection.setRemoteDescription(description).
+    then(() => console.log("REMOTE: Remote description set.")).
+    catch((err) => console.error(err));
+
+  console.log("REMOTE: Creating answer.");
+  remoteConnection.createAnswer().
+    then(createdAnswer).
+    catch((err) => console.error(err));
 }
 
-function setLocalDescriptionSuccess()
+function createdAnswer(description)
 {
-  console.log("Local description set.")
+  console.log("REMOTE: Setting local description.")
+  remoteConnection.setLocalDescription(description).
+    then(() => console.log("REMOTE: Local description set.")).
+    catch((err) => console.error(err));
+
+  // CONNECTIION IS FAKE, JUST FOR TESTING PURPOSES.  THIS WILL BE ON THE CLIENT
+
+  console.log("Setting remote description.")
+  connection.setRemoteDescription(description).
+    then(() => console.log("Remote description set.")).
+    catch((err) => console.error(err));
 }
 
 //----------------------------------------
