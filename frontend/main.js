@@ -1,3 +1,5 @@
+'use strict';
+
 var recorder, chunks;
 
 document.addEventListener("DOMContentLoaded", initDocument);
@@ -39,7 +41,7 @@ function stopRecording()
 function combineChunks()
 {
   console.log("Combining chunks.");
-  var downloadButton;
+  var downloadButton, blob;
 
   if(!chunks)            {console.log("Chunks not initialized"); return;}
   if(chunks.lenght == 0) {console.log("No chunks recorded");     return;}
