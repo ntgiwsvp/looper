@@ -95,6 +95,7 @@ function handleRemoteConnectionChange(event)
 function gotRemoteMediaStream(event)
 {
   console.log("REMOTE EVENT addstream")
+  startRecording(event.stream);
 }
 
 function setLocalDescription(description)
