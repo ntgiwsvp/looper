@@ -1,6 +1,6 @@
 'use strict';
 
-var recorder, chunks;
+var recorder, chunks, connection;
 
 document.addEventListener("DOMContentLoaded", initDocument);
 
@@ -13,9 +13,38 @@ function initDocument()
 
 function startStream()
 {
-  console.log("Starting stream.");
-  navigator.mediaDevices.getUserMedia({audio: true}).then(startRecording).catch(console.log);
+  console.log("Getting user media.");
+  //navigator.mediaDevices.getUserMedia({audio: true}).then(startRecording).catch(console.log);
+  navigator.mediaDevices.getUserMedia({audio: true}).then(startCall).catch(console.log);
 }
+
+function startCall(stream)
+{
+  console.log("Creating connection.")
+  connection = new RTCPeerConnection();
+
+  // connection.addEventListener('icecandidate', XXX);
+  // connection.addEventListener('iceconnectionstatechange', XXX);
+
+  console.log("Adding stream to connection.")
+  connection.addStream(stream);
+
+  console.log("Creating offer.")
+  connection.createOffer({voiceActivityDetection: false}).then(setLocalDescription).catch(console.log);
+}
+
+function setLocalDescription(description)
+{
+  console.log("Setting local description.");
+  connection.setLocalDescription(description).then(setLocalDescriptionSuccess).catch(console.log)
+}
+
+function setLocalDescriptionSuccess()
+{
+  console.log("Local description set.")
+}
+
+//----------------------------------------
 
 function startRecording(stream)
 {
