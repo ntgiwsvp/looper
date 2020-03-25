@@ -46,13 +46,13 @@ function receiveMessage(event)
     connection
       .setRemoteDescription(new RTCSessionDescription(data.offer))
       .then(() => console.log("Remote description set."))
-      .catch((err) => console.error(err));
+      //.catch((err) => console.error(err));
   
     console.log("Creating answer.");
     connection
       .createAnswer()
       .then(sendAnswer)
-      .catch((err) => console.error(err));
+      //.catch((err) => console.error(err));
   }
 
   if (data.iceCandidate)
@@ -62,7 +62,7 @@ function receiveMessage(event)
     console.log("Adding ICE candidate to connection.")
     connection.addIceCandidate(data.iceCandidate)
       .then(() => console.log("ICE candidate added to connection."))
-      .catch((err) => console.error(err))
+      //.catch((err) => console.error(err));
   }
 }
 
@@ -74,7 +74,7 @@ function sendAnswer(description)
   connection
     .setLocalDescription(description)
     .then(() => console.log("Local description set."))
-    .catch((err) => console.error(err));
+    //.catch((err) => console.error(err));
 
   console.log("Sending answer.")
   signalingChannel.send(JSON.stringify({"answer": description}));

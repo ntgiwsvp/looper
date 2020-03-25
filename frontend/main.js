@@ -26,6 +26,7 @@ function startStream()
   navigator.mediaDevices
     .getUserMedia({audio: true})
     .then(startCall)
+    //.catch((err) => console.error(err));
 }
 
 // Once we obtained the stream from the user's microphone, we create the
@@ -46,7 +47,7 @@ function startCall(stream)
   connection
     .createOffer({voiceActivityDetection: false})
     .then(sendOffer)
-    .catch((err) => console.error(err));
+    //.catch((err) => console.error(err));
 }
 
 function receiveMessage(event)
@@ -63,7 +64,7 @@ function receiveMessage(event)
     connection
       .setRemoteDescription(new RTCSessionDescription(data.answer))
       .then(() => console.log("Remote description set."))
-      .catch((err) => console.error(err));
+      //.catch((err) => console.error(err));
   }
 
   if (data.candidate)
@@ -72,10 +73,9 @@ function receiveMessage(event)
 
     console.log("Adding ICE candidate to connection.")
     connection
-      //.addIceCandidate(new RTCIceCandidate(event.candidate))
       .addIceCandidate(data.iceCandidate)
       .then(() => console.log("ICE candidate added to connection."))
-      .catch((err) => console.error(err))
+      //.catch((err) => console.error(err));
   }
 }
 
@@ -92,7 +92,7 @@ function sendOffer(description)
   connection
     .setLocalDescription(description)
     .then(() => console.log("Local description set."))
-    .catch((err) => console.error(err));
+    //.catch((err) => console.error(err));
 
   console.log("Sending offer.");
   signalingChannel.send(JSON.stringify({"offer": description}));
