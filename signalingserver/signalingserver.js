@@ -1,22 +1,20 @@
 "use strict";
 
-var streamServerSocket;
+var streamServerSocket, clientSocket;
 
 startServer();
 
 function startServer()
 {
-  console.log("Starting signaling server.");
-
   const WS = require("ws"); // See https://github.com/websockets/ws
   const server = new WS.Server({port: 8080});
 
-  server.on("connection", initializeStreamServerConnection);
+  server.on("connection", initializeConnection);
 
-  console.log("Please start the stream server first, then the clients!");
+  console.log("Ready to signal.");
 }
 
-function initializeStreamServerConnection(socket, request)
+function initializeConnection(socket, request)
 {
   if (!streamServerSocket)
   {
@@ -27,18 +25,19 @@ function initializeStreamServerConnection(socket, request)
   else
   {
     console.log("Client connected.");
-    streamServerSocket.onmessage = receiveClientMessage;
+    clientSocket = socket;
+    clientSocket.onmessage = receiveClientMessage;
   }
 }
 
 function receiveStreamServerMessage(event)
 {
-  console.log("Message from stream server received.");
-  //event.target.send("I totally agree with " + event.data);
+  console.log("Forwardging message from stream server to client.");
+  clientSocket.send(event.data);
 }
 
 function receiveClientMessage(event)
 {
-  console.log("Message from client.");
-  //event.target.send("I totally agree with " + event.data);
+  console.log("Forwardeing message from client to stream server.");
+  streamServerSocket.send(event.data);
 }
