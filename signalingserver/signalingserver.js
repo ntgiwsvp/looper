@@ -1,31 +1,44 @@
 "use strict";
 
-console.log("Starting signaling server.");
+var streamServerSocket;
 
-const WebSocket = require('ws'); // see https://github.com/websockets/ws
-const server = new WebSocket.Server({port: 8080});
+startServer();
 
-server.on("connection", initializeConnection);
-server.on("error",      (error) => console.error(error));
-
-console.log("Listening on 8080.");
-
-function initializeConnection(socket, request)
+function startServer()
 {
-  console.log("Connection opened");
+  console.log("Starting signaling server.");
 
-  socket.onclose   = closeConnection;
-  socket.onmessage = receiveMessage;
-  socket.onerror   = ((error) => console.error(error));
+  const WS = require("ws"); // See https://github.com/websockets/ws
+  const server = new WS.Server({port: 8080});
+
+  server.on("connection", initializeStreamServerConnection);
+
+  console.log("Please start the stream server first, then the clients!");
 }
 
-function closeConnection(event)
+function initializeStreamServerConnection(socket, request)
 {
-  console.log("Connection closed.");
+  if (!streamServerSocket)
+  {
+    console.log("Stream server connected.");
+    streamServerSocket = socket;
+    streamServerSocket.onmessage = receiveStreamServerMessage;  
+  }
+  else
+  {
+    console.log("Client connected.");
+    streamServerSocket.onmessage = receiveClientMessage;
+  }
 }
 
-function receiveMessage(event)
+function receiveStreamServerMessage(event)
 {
-  console.log("Message event received: %s", event.data);
-  event.target.send("I totally agree with " + event.data);
+  console.log("Message from stream server received.");
+  //event.target.send("I totally agree with " + event.data);
+}
+
+function receiveClientMessage(event)
+{
+  console.log("Message from client.");
+  //event.target.send("I totally agree with " + event.data);
 }
