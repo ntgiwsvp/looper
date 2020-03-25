@@ -4,6 +4,7 @@ var recorder, chunks, connection, remoteConnection;
 
 document.addEventListener("DOMContentLoaded", initDocument);
 
+// We start by associating the event handlers to the frontend.
 function initDocument()
 {
   console.log("Adding event handlers to DOM.")
@@ -11,23 +12,27 @@ function initDocument()
   document.getElementById("stopRecordingButton").onclick = stopRecording;
 }
 
+// Once the start button is hit, the first step is to get access to the
+// user's microphone.
 function startStream()
 {
   console.log("Getting user media.");
-  //navigator.mediaDevices.getUserMedia({audio: true}).then(startRecording).catch(console.log);
   navigator.mediaDevices
     .getUserMedia({audio: true})
     .then(startCall)
     .catch((err) => console.error(err));
 }
 
+// Once we obtained the stream from the user's microphone, we create the
+// RTC connection, register some event handlers, associate the stream,
+// and create an offer.
+// THIS FUNCTION ALSO CONTAINS SOME CODE TO BE RUN ON THE REMOTE SIDE
 function startCall(stream)
 {
   console.log("Creating connection.")
   connection = new RTCPeerConnection();
 
   connection.addEventListener('icecandidate', handleConnection);
-  connection.addEventListener('iceconnectionstatechange', handleConnectionChange);
 
   console.log("Adding stream to connection.");
   connection.addStream(stream);
@@ -38,66 +43,17 @@ function startCall(stream)
     .then(setLocalDescription)
     .catch((err) => console.error(err));
 
-  // REMOTE CONNECTION IS FAKE, JUST FOR TESTING PURPOSES.  THIS WILL BE ON THE SERVER
+  // REMOTE CONNECTION IS FAKE.  THIS WILL BE ON THE SERVER
 
   console.log("REMOTE: Creating connection.");
   remoteConnection = new RTCPeerConnection();
 
   remoteConnection.addEventListener('icecandidate', handleRemoteConnection);
-  remoteConnection.addEventListener('iceconnectionstatechange', handleRemoteConnectionChange);
   remoteConnection.addEventListener('addstream', gotRemoteMediaStream);
 }
 
-function handleConnection(event)
-{
-  console.log("EVENT icecandidate()")
-
-  if (event.candidate)
-  {
-    remoteConnection  // FAKE
-      .addIceCandidate(new RTCIceCandidate(event.candidate))
-      .then(() => console.log("Connection successful."))
-      .catch(() => console.log("Connection failed"))
-  }
-  else
-  {
-    console.log("This handler not in the original code - ???")
-  }
-}
-
-function handleConnectionChange(event)
-{
-  console.log("EVENT iceconnectionstatechange")
-}
-
-function handleRemoteConnection(event)
-{
-  console.log("REMOTE EVENT icecandidate()")
-
-  if (event.candidate)
-  {
-    connection  // FAKE
-      .addIceCandidate(new RTCIceCandidate(event.candidate))
-      .then(() => console.log("REMOTE Connection successful."))
-      .catch(() => console.log("REMOTE Connection failed"))
-  }
-  else
-  {
-    console.log("This handler not in the original code - ???")
-  }
-}
-
-function handleRemoteConnectionChange(event)
-{
-  console.log("REMOTE EVENT iceconnectionstatechange")
-}
-
-function gotRemoteMediaStream(event)
-{
-  console.log("REMOTE EVENT addstream")
-  startRecording(event.stream);
-}
-
+// Once the offer has been created, we set the local description.
+// THIS FUNCTION ALSO CONTAINS SOME CODE TO BE RUN ON THE REMOTE SIDE
 function setLocalDescription(description)
 {
   console.log("Setting local description.");
@@ -121,6 +77,38 @@ function setLocalDescription(description)
     .catch((err) => console.error(err));
 }
 
+// This is to be run on the REMOTE side.  Once a stream is added to the
+// remote connection, recording starts.
+function gotRemoteMediaStream(event)
+{
+  console.log("REMOTE EVENT addstream")
+  startRecording(event.stream);
+}
+
+// This is to be run on the REMOTE side.  Just a stream recorder.
+function startRecording(stream)
+{
+  console.log("Starting recording.")
+  recorder = new MediaRecorder(stream);
+  chunks = [];
+  recorder.ondataavailable = pushChunk;
+  recorder.onstop = combineChunks;
+  recorder.start();
+}
+
+function handleConnection(event)
+{
+  console.log("EVENT icecandidate()")
+
+  if (event.candidate)
+  {
+    remoteConnection  // FAKE
+      .addIceCandidate(new RTCIceCandidate(event.candidate))
+      .then(() => console.log("Connection successful."))
+      .catch(() => console.log("Connection failed"))
+  }
+}
+
 function createdAnswer(description)
 {
   console.log("REMOTE: Setting local description.")
@@ -138,16 +126,17 @@ function createdAnswer(description)
     .catch((err) => console.error(err));
 }
 
-//----------------------------------------
-
-function startRecording(stream)
+function handleRemoteConnection(event)
 {
-  console.log("Starting recording.")
-  recorder = new MediaRecorder(stream);
-  chunks = [];
-  recorder.ondataavailable = pushChunk;
-  recorder.onstop = combineChunks;
-  recorder.start();
+  console.log("REMOTE EVENT icecandidate()")
+
+  if (event.candidate)
+  {
+    connection  // FAKE
+      .addIceCandidate(new RTCIceCandidate(event.candidate))
+      .then(() => console.log("REMOTE Connection successful."))
+      .catch(() => console.log("REMOTE Connection failed"))
+  }
 }
 
 function pushChunk(event)
@@ -170,7 +159,6 @@ function combineChunks()
   if(chunks.lenght == 0) {console.log("No chunks recorded");     return;}
   
   blob = new Blob(chunks, {type: chunks[0].type});
-  //chunks = undefined;  Does Blob() create a copy?
   downloadButton = document.getElementById("downloadButton");
   downloadButton.href = URL.createObjectURL(blob);
   downloadButton.download = "recording.oga";
