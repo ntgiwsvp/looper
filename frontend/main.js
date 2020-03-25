@@ -32,7 +32,7 @@ function startCall(stream)
   console.log("Creating connection.")
   connection = new RTCPeerConnection();
 
-  connection.addEventListener('icecandidate', handleConnection);
+  connection.addEventListener('icecandidate', sendIceCandidate);
 
   console.log("Adding stream to connection.");
   connection.addStream(stream);
@@ -96,7 +96,7 @@ function startRecording(stream)
   recorder.start();
 }
 
-function handleConnection(event)
+function sendIceCandidate(event)
 {
   console.log("EVENT icecandidate()")
 
