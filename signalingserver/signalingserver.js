@@ -14,17 +14,18 @@ function initializeConnection(socket, request)
 {
   console.log("Connection opened");
 
-  socket.on("message", receiveMessage);
-  socket.on("close",   closeConnection);
-  socket.on("error",   (error) => console.error(error));
+  socket.onclose   = closeConnection;
+  socket.onmessage = receiveMessage;
+  socket.onerror   = ((error) => console.error(error));
 }
 
-function receiveMessage(data)
-{
-  console.log("Message received: %s", data);
-}
-
-function closeConnection(code, reason)
+function closeConnection(event)
 {
   console.log("Connection closed.");
+}
+
+function receiveMessage(event)
+{
+  console.log("Message event received: %s", event.data);
+  event.target.send("I totally agree with " + event.data);
 }
