@@ -32,12 +32,12 @@ function initializeConnection(socket, request)
 
 function receiveStreamServerMessage(event)
 {
-  console.log("Forwardging message from stream server to client.");
+  console.log("Message from stream server to client: %s", event.data);
   clientSocket.send(event.data);
 }
 
 function receiveClientMessage(event)
 {
-  console.log("Forwardeing message from client to stream server.");
+  console.log("Message from client to stream server: %s", event.data);
   streamServerSocket.send(event.data);
 }
