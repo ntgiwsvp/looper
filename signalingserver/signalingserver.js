@@ -15,20 +15,16 @@ function startServer()
 
 function initializeConnection(socket, request)
 {
-  if (!sockets.server)
-  {
-    console.log("\nStream server connected.");
-    sockets["server"] = socket;
-  }
-  else
-  {
-    console.log("\nClient connected.");
-    sockets["client"] = socket;
-  }
-  socket.onmessage = receiveMessage;
+  var clientId;
+
+  clientId = Math.floor(Math.random()*1000000000);
+  console.log("\nNew client connected.  Assigning ID %d.", clientId)
+  socket.onmessage = forwardMessage;
+  sockets[clientId] = socket;
+  socket.send(JSON.stringify({id: clientId}));
 }
 
-function receiveMessage(event)
+function forwardMessage(event)
 {
   var message;
 
@@ -46,6 +42,7 @@ function receiveMessage(event)
     return;
   }
 
-  console.log("\nForwarding message to %s: %s", message.to, event.data);
+  console.log("\nForwarding message from %s to %s: %s",
+    message.from, message.to, event.data);
   sockets[message.to].send(event.data);
 }

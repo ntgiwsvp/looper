@@ -1,6 +1,7 @@
 'use strict';
 
-var signalingChannel, connection; // for RTC
+var signalingChannel, ownId, sessionId; // for Websocket
+var connection; // for RTC
 var audioContext; // for Web Audio API
 
 document.addEventListener("DOMContentLoaded", initDocument);
@@ -15,6 +16,9 @@ function initDocument()
 async function startStream()
 {
   var stream, tracks, description;
+
+  sessionId = document.getElementById("sessionId").value;
+  console.log("Joining session %s.", sessionId);
 
   console.log("Creating audio contect.");
   audioContext = new AudioContext();
@@ -48,7 +52,7 @@ async function startStream()
   console.log("Local description set.");
 
   console.log("Sending offer.");
-  signal({offer: description, to: "server"});
+  signal({offer: description});
 }
 
 async function receiveMessage(message)
@@ -56,6 +60,12 @@ async function receiveMessage(message)
   var data;
 
   data = JSON.parse(message.data);
+
+  if (data.id)
+  {
+    ownId = data.id;
+    console.log("Received own ID: %d.", ownId);
+  }
 
   if (data.answer)
   {
@@ -67,7 +77,7 @@ async function receiveMessage(message)
     console.log("Remote description set.");
   }
 
-  if (data.candidate)
+  if (data.iceCandidate)
   {
     console.log("Received ICE candidate.");
     console.log(data.iceCandidate);
@@ -89,7 +99,7 @@ function sendIceCandidate(event)
   {
     console.log("Sending ICE candidate to signaling server");
     console.log(event.candidate);
-    signal({iceCandidate: event.candidate, to: "server"});
+    signal({iceCandidate: event.candidate});
   }
 }
 
@@ -109,5 +119,7 @@ function gotRemoteTrack(event)
 
 function signal(message)
 {
+  message.to = sessionId;
+  message.from = ownId;
   signalingChannel.send(JSON.stringify(message));
 }

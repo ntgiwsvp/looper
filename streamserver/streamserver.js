@@ -1,6 +1,7 @@
 'use strict';
 
-var signalingChannel, connection; // For RTC
+var signalingChannel, ownId, clientId; // for Websocket 
+var connection; // For RTC
 var recorder, chunks; // for recording
 var audioContext; // for Web Audio API
 
@@ -42,9 +43,18 @@ async function receiveMessage(message)
 
   data = JSON.parse(message.data);
 
+  if (data.id)
+  {
+    ownId = data.id;
+    console.log("Received own ID: %d.", ownId);
+    document.getElementById("sessionId").innerHTML = ownId;
+  }
+
   if (data.offer)
   {
-    console.log("Received offer.")
+    clientId = data.from;
+    
+    console.log("Received offer from %s.", clientId)
     console.log(data.offer);
 
     console.log("Setting remote description.");
@@ -59,7 +69,7 @@ async function receiveMessage(message)
     console.log("Local description set.");
 
     console.log("Sending answer.")
-    signal({answer: description, to: "client"});
+    signal({answer: description});
   }
 
   if (data.iceCandidate)
@@ -79,7 +89,7 @@ function sendIceCandidate(event)
   {
     console.log("Sending ICE candidate to signaling server");
     console.log(event.candidate);
-    signal({iceCandidate: event.candidate, to: "client"});
+    signal({iceCandidate: event.candidate});
   }
 }
 
@@ -153,5 +163,7 @@ function combineChunks()
 
 function signal(message)
 {
+  message.to = clientId;
+  message.from = ownId;
   signalingChannel.send(JSON.stringify(message));
 }
