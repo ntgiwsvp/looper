@@ -109,7 +109,7 @@ function gotRemoteMediaStream(event)
                                                                   maxDelayTime: 1.0});
   outputNode = new MediaStreamAudioDestinationNode(audioContext);
   
-  console.log("Connection audio nodes.")
+  console.log("Connecting audio nodes.")
   inputNode.connect(gainNode);
   delayNode.connect(gainNode);
   gainNode .connect(delayNode);
