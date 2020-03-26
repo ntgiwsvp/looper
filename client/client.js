@@ -12,8 +12,6 @@ function initDocument()
   document.getElementById("startButton").onclick = startStream;
 }
 
-// Once the start button is hit, the first step is to get access to the
-// user's microphone.
 async function startStream()
 {
   var stream, description;
@@ -22,18 +20,17 @@ async function startStream()
   audioContext = new AudioContext();
 
   console.log("Creating connection to signaling server.");
-  signalingChannel = new WebSocket("ws://localhost:8080/");
-  signalingChannel.addEventListener("message", receiveMessage);
+  signalingChannel                   = new WebSocket("ws://localhost:8080/");
+  signalingChannel.onmessage         = receiveMessage;
   // XXX Dirty trick that needs to be corrected:  Time to setup WebSocket
   //     is hidden while user is approving media acces.  Should use
   //     WebSocket.onopen to make sure not to send messages too early.
 
   console.log("Creating RTC connection.")
   connection = new RTCPeerConnection();
-  connection.addEventListener('icecandidate', sendIceCandidate);
-  connection.addEventListener("connectionstatechange",
-    reportConnectionState);
-  connection.addEventListener("addstream", gotRemoteMediaStream);
+  connection.onicecandidate          = sendIceCandidate;
+  connection.onaddstream             = gotRemoteMediaStream;
+  connection.onconnectionstatechange = reportConnectionState;
 
   console.log("Getting user media.");
   stream = await navigator.mediaDevices.getUserMedia({audio: true});
@@ -53,11 +50,11 @@ async function startStream()
   signalingChannel.send(JSON.stringify({offer: description}));
 }
 
-async function receiveMessage(event)
+async function receiveMessage(message)
 {
   var data;
 
-  data = JSON.parse(event.data);
+  data = JSON.parse(message.data);
 
   if (data.answer)
   {

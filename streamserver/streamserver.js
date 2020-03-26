@@ -19,15 +19,14 @@ function startServer()
   audioContext = new AudioContext(); // Use OfflineAudioContext for server?
 
   console.log("Creating RTC connection");
-  connection = new RTCPeerConnection();
-  connection.addEventListener('icecandidate', sendIceCandidate);
-  connection.addEventListener('addstream', gotRemoteMediaStream);
-  connection.addEventListener("connectionstatechange",
-    reportConnectionState);
+  connection                         = new RTCPeerConnection();
+  connection.onicecandidate          = sendIceCandidate;
+  connection.onaddstream             = gotRemoteMediaStream; // change to track
+  connection.onconnectionstatechange = reportConnectionState;
   
   console.log("Creating connection to signaling server.");
-  signalingChannel = new WebSocket("ws://localhost:8080/")
-  signalingChannel.addEventListener("message", receiveMessage);
+  signalingChannel                   = new WebSocket("ws://localhost:8080/")
+  signalingChannel.onmessage         = receiveMessage;
 
   console.log("Waiting for offers.")
 }
@@ -37,11 +36,11 @@ function reportConnectionState(event)
   console.log("Connection state: %s.", connection.connectionState)
 }
 
-async function receiveMessage(event)
+async function receiveMessage(message)
 {
   var data, description;
 
-  data = JSON.parse(event.data);
+  data = JSON.parse(message.data);
 
   if (data.offer)
   {
