@@ -59,7 +59,7 @@ async function receiveMessage(message)
     console.log("Local description set.");
 
     console.log("Sending answer.")
-    signal({"answer": description});
+    signal({answer: description, to: "client"});
   }
 
   if (data.iceCandidate)
@@ -79,7 +79,7 @@ function sendIceCandidate(event)
   {
     console.log("Sending ICE candidate to signaling server");
     console.log(event.candidate);
-    signal({iceCandidate: event.candidate});
+    signal({iceCandidate: event.candidate, to: "client"});
   }
 }
 

@@ -47,7 +47,7 @@ async function startStream()
   console.log("Local description set.");
 
   console.log("Sending offer.");
-  signal({offer: description});
+  signal({offer: description, to: "server"});
 }
 
 async function receiveMessage(message)
@@ -88,7 +88,7 @@ function sendIceCandidate(event)
   {
     console.log("Sending ICE candidate to signaling server");
     console.log(event.candidate);
-    signal({iceCandidate: event.candidate});
+    signal({iceCandidate: event.candidate, to: "server"});
   }
 }
 
