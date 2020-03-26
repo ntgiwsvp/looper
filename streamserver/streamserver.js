@@ -21,7 +21,7 @@ function startServer()
   console.log("Creating RTC connection");
   connection                         = new RTCPeerConnection();
   connection.onicecandidate          = sendIceCandidate;
-  connection.onaddstream             = gotRemoteMediaStream; // change to track
+  connection.ontrack                 = gotRemoteTrack
   connection.onconnectionstatechange = reportConnectionState;
   
   console.log("Creating connection to signaling server.");
@@ -83,20 +83,20 @@ function sendIceCandidate(event)
   }
 }
 
-function gotRemoteMediaStream(event)
+function gotRemoteTrack(event)
 {
-  var inputNode, gainNode, delayNode, outputNode;
+  var inputNode, gainNode, delayNode, outputNode, tracks;
 
   console.log("Got remote media stream.")
 
   console.log("Creating audio nodes.")
   // Should be replaced by MediaStreamTrackAudioSourceNode according to 
   // https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamAudioSourceNode
-  inputNode  = new MediaStreamAudioSourceNode     (audioContext, {mediaStream:  event.stream});
-  gainNode   = new GainNode                       (audioContext, {gain:         0.9});
-  delayNode  = new DelayNode                      (audioContext, {delayTime:    1.0,
-                                                                  maxDelayTime: 1.0});
+  inputNode  = new MediaStreamTrackAudioSourceNode(audioContext, {mediaStreamTrack: event.track});
   outputNode = new MediaStreamAudioDestinationNode(audioContext);
+  gainNode   = new GainNode                       (audioContext, {gain:             0.9});
+  delayNode  = new DelayNode                      (audioContext, {delayTime:        1.0,
+                                                                  maxDelayTime:     1.0});
   
   console.log("Connecting audio nodes.")
   inputNode.connect(gainNode);
@@ -109,7 +109,8 @@ function gotRemoteMediaStream(event)
   //      inputNode -> gainNode -> outputNode
 
   console.log("Sending output to client.");
-  connection.addStream(outputNode.stream);
+  tracks = outputNode.stream.getAudioTracks();
+  connection.addTrack(tracks[0]);
 
   // Record output
   startRecording(outputNode.stream); 

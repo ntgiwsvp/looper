@@ -14,7 +14,7 @@ function initDocument()
 
 async function startStream()
 {
-  var stream, description;
+  var stream, tracks, description;
 
   console.log("Creating audio contect.");
   audioContext = new AudioContext();
@@ -29,14 +29,15 @@ async function startStream()
   console.log("Creating RTC connection.")
   connection = new RTCPeerConnection();
   connection.onicecandidate          = sendIceCandidate;
-  connection.onaddstream             = gotRemoteMediaStream;
+  connection.ontrack                 = gotRemoteTrack;
   connection.onconnectionstatechange = reportConnectionState;
 
   console.log("Getting user media.");
   stream = await navigator.mediaDevices.getUserMedia({audio: true});
-  
-  console.log("Adding stream to connection.");
-  connection.addStream(stream);
+
+  console.log("Adding track to connection.");
+  tracks = stream.getAudioTracks();
+  connection.addTrack(tracks[0]);
 
   console.log("Creating offer.")
   description = await connection.createOffer({voiceActivityDetection: false});
@@ -92,14 +93,15 @@ function sendIceCandidate(event)
   }
 }
 
-function gotRemoteMediaStream(event)
+function gotRemoteTrack(event)
 {
   var inputNode;
 
   console.log("Got remote media stream.")
 
   console.log("Creating audio nodes.")
-  inputNode  = new MediaStreamAudioSourceNode     (audioContext, {mediaStream:  event.stream});
+  inputNode  = new MediaStreamTrackAudioSourceNode(audioContext,
+    {mediaStreamTrack: event.track});
 
   console.log("Connecting audio nodes.")
   inputNode.connect(audioContext.destination)
