@@ -1,6 +1,6 @@
 "use strict";
 
-var streamServerSocket, clientSocket;
+var sockets;
 
 startServer();
 
@@ -8,36 +8,44 @@ function startServer()
 {
   const WS = require("ws"); // See https://github.com/websockets/ws
   const server = new WS.Server({port: 8080});
-
+  sockets = {};
   server.on("connection", initializeConnection);
-
   console.log("Ready to signal.");
 }
 
 function initializeConnection(socket, request)
 {
-  if (!streamServerSocket)
+  if (!sockets.server)
   {
     console.log("\nStream server connected.");
-    streamServerSocket = socket;
-    streamServerSocket.onmessage = receiveStreamServerMessage;  
+    sockets["server"] = socket;
   }
   else
   {
     console.log("\nClient connected.");
-    clientSocket = socket;
-    clientSocket.onmessage = receiveClientMessage;
+    sockets["client"] = socket;
   }
+  socket.onmessage = receiveMessage;
 }
 
-function receiveStreamServerMessage(event)
+function receiveMessage(event)
 {
-  console.log("\nMessage from stream server to client: %s", event.data);
-  clientSocket.send(event.data);
-}
+  var message;
 
-function receiveClientMessage(event)
-{
-  console.log("\nMessage from client to stream server: %s", event.data);
-  streamServerSocket.send(event.data);
+  message = JSON.parse(event.data);
+
+  if (!message.to)
+  {
+    console.log("\nDiscarding message without recipient.");
+    return;
+  }
+
+  if (!sockets[message.to])
+  {
+    console.log("\nDiscarding message to unknown recipient %s.", message.to);
+    return;
+  }
+
+  console.log("\nForwarding message to %s: %s", message.to, event.data);
+  sockets[message.to].send(event.data);
 }
