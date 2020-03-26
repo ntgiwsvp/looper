@@ -59,17 +59,19 @@ async function receiveMessage(message)
   if (data.answer)
   {
     console.log("Received answer.")
+    console.log(data.answer);
 
     console.log("Setting remote description.")
-    await connection.setRemoteDescription(new RTCSessionDescription(data.answer));
+    await connection.setRemoteDescription(data.answer);
     console.log("Remote description set.");
   }
 
   if (data.candidate)
   {
-    console.log("Received ICE candidate.")
+    console.log("Received ICE candidate.");
+    console.log(data.iceCandidate);
 
-    console.log("Adding ICE candidate to connection.")
+    console.log("Adding ICE candidate to connection.");
     await connection.addIceCandidate(data.iceCandidate);
     console.log("ICE candidate added to connection.");
   }
@@ -86,6 +88,7 @@ function sendIceCandidate(event)
   if (event.candidate)
   {
     console.log("Sending ICE candidate to signaling server");
+    console.log(event.candidate);
     signalingChannel.send(JSON.stringify({iceCandidate: event.candidate}));
   }
 }
