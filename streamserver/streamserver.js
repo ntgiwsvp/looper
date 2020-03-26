@@ -113,6 +113,7 @@ function gotRemoteMediaStream(event)
   inputNode.connect(gainNode);
   gainNode .connect(delayNode);
   delayNode.connect(audioContext.destination);
+  delayNode.connect(gainNode); // feedback
 
   startRecording(event.stream); // To be changed, should record output!
 }
