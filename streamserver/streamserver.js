@@ -109,13 +109,17 @@ function gotRemoteMediaStream(event)
                                                             maxDelayTime: 1.0});
   
   console.log("Connection audio nodes.")
-  inputNode.connect(audioContext.destination);
   inputNode.connect(gainNode);
   gainNode .connect(delayNode);
-  delayNode.connect(audioContext.destination);
-  delayNode.connect(gainNode); // feedback
+  delayNode.connect(gainNode);
+  gainNode .connect(audioContext.destination);
+  //                   delayNode
+  //                    |    A
+  //                    V    |
+  //      inputNode -> gainNode -> destination
 
-  startRecording(event.stream); // To be changed, should record output!
+  // To be changed, should record output!
+  startRecording(event.stream); 
 }
 
 function startRecording(stream)
