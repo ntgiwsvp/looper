@@ -47,7 +47,7 @@ async function startStream()
   console.log("Local description set.");
 
   console.log("Sending offer.");
-  signalingChannel.send(JSON.stringify({offer: description}));
+  signal({offer: description});
 }
 
 async function receiveMessage(message)
@@ -82,14 +82,13 @@ function reportConnectionState(event)
   console.log("Connection state: %s.", connection.connectionState)
 }
 
-
 function sendIceCandidate(event)
 {
   if (event.candidate)
   {
     console.log("Sending ICE candidate to signaling server");
     console.log(event.candidate);
-    signalingChannel.send(JSON.stringify({iceCandidate: event.candidate}));
+    signal({iceCandidate: event.candidate});
   }
 }
 
@@ -104,4 +103,9 @@ function gotRemoteMediaStream(event)
 
   console.log("Connecting audio nodes.")
   inputNode.connect(audioContext.destination)
+}
+
+function signal(message)
+{
+  signalingChannel.send(JSON.stringify(message));
 }

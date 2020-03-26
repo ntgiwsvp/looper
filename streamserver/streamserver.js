@@ -59,7 +59,7 @@ async function receiveMessage(message)
     console.log("Local description set.");
 
     console.log("Sending answer.")
-    signalingChannel.send(JSON.stringify({"answer": description}));
+    signal({"answer": description});
   }
 
   if (data.iceCandidate)
@@ -79,7 +79,7 @@ function sendIceCandidate(event)
   {
     console.log("Sending ICE candidate to signaling server");
     console.log(event.candidate);
-    signalingChannel.send(JSON.stringify({iceCandidate: event.candidate}));
+    signal({iceCandidate: event.candidate});
   }
 }
 
@@ -148,4 +148,9 @@ function combineChunks()
   downloadButton = document.getElementById("downloadButton");
   downloadButton.href = URL.createObjectURL(blob);
   downloadButton.download = "recording.oga";
+}
+
+function signal(message)
+{
+  signalingChannel.send(JSON.stringify(message));
 }
