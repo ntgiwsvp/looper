@@ -1,6 +1,8 @@
 'use strict';
 
-var signalingChannel, connection, recorder, chunks;
+var signalingChannel, connection; // For RTC
+var recorder, chunks; // for recording
+var audioContext; // for Web Audio API
 
 document.addEventListener("DOMContentLoaded", initDocument);
 
@@ -13,6 +15,9 @@ function initDocument()
 
 function startServer()
 {
+  console.log("Creating audio contect.");
+  audioContext = new AudioContext(); // Use OfflineAudioContext for server!
+
   console.log("Creating RTC connection");
   connection = new RTCPeerConnection();
   connection.addEventListener('icecandidate', sendIceCandidate);
@@ -91,8 +96,19 @@ function sendIceCandidate(event)
 
 function gotRemoteMediaStream(event)
 {
+  var inputNode;
+
   console.log("Got remote media stream.")
-  startRecording(event.stream);
+
+  console.log("Creating audio nodes.")
+  inputNode = new MediaStreamAudioSourceNode(audioContext, {mediaStream: event.stream});
+    // Should be replaced by MediaStreamTrackAudioSourceNode according to 
+    // https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamAudioSourceNode
+    
+  console.log("Connection audio nodes.")
+  inputNode.connect(audioContext.destination);
+
+  startRecording(event.stream); // To be changed, should record output!
 }
 
 function startRecording(stream)
