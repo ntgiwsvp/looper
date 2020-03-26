@@ -37,9 +37,9 @@ function reportConnectionState(event)
   console.log("Connection state: %s.", connection.connectionState)
 }
 
-function receiveMessage(event)
+async function receiveMessage(event)
 {
-  var data;
+  var data, description;
 
   data = JSON.parse(event.data);
 
@@ -48,14 +48,18 @@ function receiveMessage(event)
     console.log("Received offer.")
 
     console.log("Setting remote description.");
-    connection
-      .setRemoteDescription(new RTCSessionDescription(data.offer))
-      .then(() => console.log("Remote description set."));
+    await connection.setRemoteDescription(new RTCSessionDescription(data.offer));
+    console.log("Remote description set.");
   
     console.log("Creating answer.");
-    connection
-      .createAnswer()
-      .then(sendAnswer);
+    description = await connection.createAnswer();
+  
+    console.log("Setting local description.")
+    await connection.setLocalDescription(description);
+    console.log("Local description set.");
+
+    console.log("Sending answer.")
+    signalingChannel.send(JSON.stringify({"answer": description}));
   }
 
   if (data.iceCandidate)
@@ -63,22 +67,9 @@ function receiveMessage(event)
     console.log("Received ICE candidate.")
 
     console.log("Adding ICE candidate to connection.")
-    connection.addIceCandidate(data.iceCandidate)
-      .then(() => console.log("ICE candidate added to connection."));
+    await connection.addIceCandidate(data.iceCandidate);
+    console.log("ICE candidate added to connection.");
   }
-}
-
-function sendAnswer(description)
-{
-  console.log("Created answer.");
-
-  console.log("Setting local description.")
-  connection
-    .setLocalDescription(description)
-    .then(() => console.log("Local description set."));
-
-  console.log("Sending answer.")
-  signalingChannel.send(JSON.stringify({"answer": description}));
 }
 
 function sendIceCandidate(event)

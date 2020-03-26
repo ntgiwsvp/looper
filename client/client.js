@@ -14,8 +14,10 @@ function initDocument()
 
 // Once the start button is hit, the first step is to get access to the
 // user's microphone.
-function startStream()
+async function startStream()
 {
+  var stream, description;
+
   console.log("Creating audio contect.");
   audioContext = new AudioContext();
 
@@ -26,17 +28,6 @@ function startStream()
   //     is hidden while user is approving media acces.  Should use
   //     WebSocket.onopen to make sure not to send messages too early.
 
-  console.log("Getting user media.");
-  navigator.mediaDevices
-    .getUserMedia({audio: true})
-    .then(startCall);
-}
-
-// Once we obtained the stream from the user's microphone, we create the
-// RTC connection, register some event handlers, associate the stream,
-// and create an offer.
-function startCall(stream)
-{
   console.log("Creating RTC connection.")
   connection = new RTCPeerConnection();
   connection.addEventListener('icecandidate', sendIceCandidate);
@@ -44,16 +35,25 @@ function startCall(stream)
     reportConnectionState);
   connection.addEventListener("addstream", gotRemoteMediaStream);
 
+  console.log("Getting user media.");
+  stream = await navigator.mediaDevices.getUserMedia({audio: true});
+  
   console.log("Adding stream to connection.");
   connection.addStream(stream);
 
   console.log("Creating offer.")
-  connection
-    .createOffer({voiceActivityDetection: false})
-    .then(sendOffer);
+  description = await connection.createOffer({voiceActivityDetection: false});
+  console.log("Created offer.");
+
+  console.log("Setting local description.");
+  await connection.setLocalDescription(description);
+  console.log("Local description set.");
+
+  console.log("Sending offer.");
+  signalingChannel.send(JSON.stringify({offer: description}));
 }
 
-function receiveMessage(event)
+async function receiveMessage(event)
 {
   var data;
 
@@ -64,9 +64,8 @@ function receiveMessage(event)
     console.log("Received answer.")
 
     console.log("Setting remote description.")
-    connection
-      .setRemoteDescription(new RTCSessionDescription(data.answer))
-      .then(() => console.log("Remote description set."));
+    await connection.setRemoteDescription(new RTCSessionDescription(data.answer));
+    console.log("Remote description set.");
   }
 
   if (data.candidate)
@@ -74,9 +73,8 @@ function receiveMessage(event)
     console.log("Received ICE candidate.")
 
     console.log("Adding ICE candidate to connection.")
-    connection
-      .addIceCandidate(data.iceCandidate)
-      .then(() => console.log("ICE candidate added to connection."));
+    await connection.addIceCandidate(data.iceCandidate);
+    console.log("ICE candidate added to connection.");
   }
 }
 
@@ -85,18 +83,6 @@ function reportConnectionState(event)
   console.log("Connection state: %s.", connection.connectionState)
 }
 
-function sendOffer(description)
-{
-  console.log("Created offer.");
-
-  console.log("Setting local description.");
-  connection
-    .setLocalDescription(description)
-    .then(() => console.log("Local description set."));
-
-  console.log("Sending offer.");
-  signalingChannel.send(JSON.stringify({offer: description}));
-}
 
 function sendIceCandidate(event)
 {
