@@ -29,8 +29,7 @@ function startStream()
   console.log("Getting user media.");
   navigator.mediaDevices
     .getUserMedia({audio: true})
-    .then(startCall)
-    //.catch((err) => console.error(err));
+    .then(startCall);
 }
 
 // Once we obtained the stream from the user's microphone, we create the
@@ -51,8 +50,7 @@ function startCall(stream)
   console.log("Creating offer.")
   connection
     .createOffer({voiceActivityDetection: false})
-    .then(sendOffer)
-    //.catch((err) => console.error(err));
+    .then(sendOffer);
 }
 
 function receiveMessage(event)
@@ -68,8 +66,7 @@ function receiveMessage(event)
     console.log("Setting remote description.")
     connection
       .setRemoteDescription(new RTCSessionDescription(data.answer))
-      .then(() => console.log("Remote description set."))
-      //.catch((err) => console.error(err));
+      .then(() => console.log("Remote description set."));
   }
 
   if (data.candidate)
@@ -79,8 +76,7 @@ function receiveMessage(event)
     console.log("Adding ICE candidate to connection.")
     connection
       .addIceCandidate(data.iceCandidate)
-      .then(() => console.log("ICE candidate added to connection."))
-      //.catch((err) => console.error(err));
+      .then(() => console.log("ICE candidate added to connection."));
   }
 }
 
@@ -96,11 +92,10 @@ function sendOffer(description)
   console.log("Setting local description.");
   connection
     .setLocalDescription(description)
-    .then(() => console.log("Local description set."))
-    //.catch((err) => console.error(err));
+    .then(() => console.log("Local description set."));
 
   console.log("Sending offer.");
-  signalingChannel.send(JSON.stringify({"offer": description}));
+  signalingChannel.send(JSON.stringify({offer: description}));
 }
 
 function sendIceCandidate(event)
@@ -108,7 +103,7 @@ function sendIceCandidate(event)
   if (event.candidate)
   {
     console.log("Sending ICE candidate to signaling server");
-    signalingChannel.send(JSON.stringify({"iceCandidate": event.candidate}));
+    signalingChannel.send(JSON.stringify({iceCandidate: event.candidate}));
   }
 }
 

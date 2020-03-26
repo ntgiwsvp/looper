@@ -16,7 +16,7 @@ function initDocument()
 function startServer()
 {
   console.log("Creating audio contect.");
-  audioContext = new AudioContext(); // Use OfflineAudioContext for server!
+  audioContext = new AudioContext(); // Use OfflineAudioContext for server?
 
   console.log("Creating RTC connection");
   connection = new RTCPeerConnection();
@@ -50,14 +50,12 @@ function receiveMessage(event)
     console.log("Setting remote description.");
     connection
       .setRemoteDescription(new RTCSessionDescription(data.offer))
-      .then(() => console.log("Remote description set."))
-      //.catch((err) => console.error(err));
+      .then(() => console.log("Remote description set."));
   
     console.log("Creating answer.");
     connection
       .createAnswer()
-      .then(sendAnswer)
-      //.catch((err) => console.error(err));
+      .then(sendAnswer);
   }
 
   if (data.iceCandidate)
@@ -66,8 +64,7 @@ function receiveMessage(event)
 
     console.log("Adding ICE candidate to connection.")
     connection.addIceCandidate(data.iceCandidate)
-      .then(() => console.log("ICE candidate added to connection."))
-      //.catch((err) => console.error(err));
+      .then(() => console.log("ICE candidate added to connection."));
   }
 }
 
@@ -78,8 +75,7 @@ function sendAnswer(description)
   console.log("Setting local description.")
   connection
     .setLocalDescription(description)
-    .then(() => console.log("Local description set."))
-    //.catch((err) => console.error(err));
+    .then(() => console.log("Local description set."));
 
   console.log("Sending answer.")
   signalingChannel.send(JSON.stringify({"answer": description}));
@@ -90,7 +86,7 @@ function sendIceCandidate(event)
   if (event.candidate)
   {
     console.log("Sending ICE candidate to signaling server");
-    signalingChannel.send(JSON.stringify({"iceCandidate": event.candidate}));
+    signalingChannel.send(JSON.stringify({iceCandidate: event.candidate}));
   }
 }
 
