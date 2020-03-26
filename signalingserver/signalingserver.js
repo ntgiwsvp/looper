@@ -18,13 +18,13 @@ function initializeConnection(socket, request)
 {
   if (!streamServerSocket)
   {
-    console.log("Stream server connected.");
+    console.log("\nStream server connected.");
     streamServerSocket = socket;
     streamServerSocket.onmessage = receiveStreamServerMessage;  
   }
   else
   {
-    console.log("Client connected.");
+    console.log("\nClient connected.");
     clientSocket = socket;
     clientSocket.onmessage = receiveClientMessage;
   }
@@ -32,12 +32,12 @@ function initializeConnection(socket, request)
 
 function receiveStreamServerMessage(event)
 {
-  console.log("Message from stream server to client: %s", event.data);
+  console.log("\nMessage from stream server to client: %s", event.data);
   clientSocket.send(event.data);
 }
 
 function receiveClientMessage(event)
 {
-  console.log("Message from client to stream server: %s", event.data);
+  console.log("\nMessage from client to stream server: %s", event.data);
   streamServerSocket.send(event.data);
 }
