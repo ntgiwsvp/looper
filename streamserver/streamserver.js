@@ -96,7 +96,7 @@ function sendIceCandidate(event)
 
 function gotRemoteMediaStream(event)
 {
-  var inputNode, delayNode;
+  var inputNode, gainNode, delayNode;
 
   console.log("Got remote media stream.")
 
@@ -104,11 +104,14 @@ function gotRemoteMediaStream(event)
   // Should be replaced by MediaStreamTrackAudioSourceNode according to 
   // https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamAudioSourceNode
   inputNode = new MediaStreamAudioSourceNode(audioContext, {mediaStream:  event.stream});
-  delayNode = new DelayNode                 (audioContext, {delayTime:    5.0,
-                                                            maxDelayTime: 5.0});
+  gainNode  = new GainNode                  (audioContext, {gain:         0.9});
+  delayNode = new DelayNode                 (audioContext, {delayTime:    1.0,
+                                                            maxDelayTime: 1.0});
   
   console.log("Connection audio nodes.")
-  inputNode.connect(delayNode);
+  inputNode.connect(audioContext.destination);
+  inputNode.connect(gainNode);
+  gainNode .connect(delayNode);
   delayNode.connect(audioContext.destination);
 
   startRecording(event.stream); // To be changed, should record output!
