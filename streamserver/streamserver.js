@@ -114,14 +114,13 @@ function gotRemoteMediaStream(event)
   delayNode.connect(gainNode);
   gainNode .connect(delayNode);
   gainNode .connect(outputNode);
-  gainNode .connect(audioContext.destination);
   //                   delayNode
   //                    |    A
   //                    V    |
-  //      inputNode -> gainNode -> destination
-  //                      |
-  //                      V
-  //                  outputNode
+  //      inputNode -> gainNode -> outputNode
+
+  console.log("Sending output to client.");
+  connection.addStream(outputNode.stream);
 
   // Record output
   startRecording(outputNode.stream); 

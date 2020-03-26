@@ -1,6 +1,7 @@
 'use strict';
 
-var signalingChannel, connection;
+var signalingChannel, connection; // for RTC
+var audioContext; // for Web Audio API
 
 document.addEventListener("DOMContentLoaded", initDocument);
 
@@ -15,6 +16,9 @@ function initDocument()
 // user's microphone.
 function startStream()
 {
+  console.log("Creating audio contect.");
+  audioContext = new AudioContext();
+
   console.log("Creating connection to signaling server.");
   signalingChannel = new WebSocket("ws://localhost:8080/");
   signalingChannel.addEventListener("message", receiveMessage);
@@ -39,6 +43,7 @@ function startCall(stream)
   connection.addEventListener('icecandidate', sendIceCandidate);
   connection.addEventListener("connectionstatechange",
     reportConnectionState);
+  connection.addEventListener("addstream", gotRemoteMediaStream);
 
   console.log("Adding stream to connection.");
   connection.addStream(stream);
@@ -105,4 +110,17 @@ function sendIceCandidate(event)
     console.log("Sending ICE candidate to signaling server");
     signalingChannel.send(JSON.stringify({"iceCandidate": event.candidate}));
   }
+}
+
+function gotRemoteMediaStream(event)
+{
+  var inputNode;
+
+  console.log("Got remote media stream.")
+
+  console.log("Creating audio nodes.")
+  inputNode  = new MediaStreamAudioSourceNode     (audioContext, {mediaStream:  event.stream});
+
+  console.log("Connecting audio nodes.")
+  inputNode.connect(audioContext.destination)
 }
