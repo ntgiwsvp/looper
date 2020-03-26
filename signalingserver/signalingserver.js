@@ -1,16 +1,22 @@
 "use strict";
 
+const http = require("http");
+const WebSocket = require("ws"); // See https://github.com/websockets/ws
+
 var sockets;
 
 startServer();
 
 function startServer()
 {
-  const WS = require("ws"); // See https://github.com/websockets/ws
-  const server = new WS.Server({port: 8080});
+  var server, wss;
+
+  server = http.createServer();
+  wss = new WebSocket.Server({server: server});
   sockets = {};
-  server.on("connection", initializeConnection);
+  wss.on("connection", initializeConnection);
   console.log("Ready to signal.");
+  server.listen(8080);
 }
 
 function initializeConnection(socket, request)
