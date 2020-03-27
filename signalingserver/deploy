@@ -1,6 +1,22 @@
 #!/bin/sh
 
+# This uses the deployment method described on
+# https://docs.microsoft.com/en-us/azure/app-service/deploy-run-package
+
+GROUPNAME="looper"
+APPNAME="loopersignaling"
+# BUG: These should be command line parameters to the script
+
+# For setup, need to run
+#
+# az webapp config appsettings set          \
+#   --resource-group "$GROUPNAME"           \
+#   --name "$APPNAME"                       \
+#   --settings WEBSITE_RUN_FROM_PACKAGE="1"
+#
+# first.
+
 az webapp deployment source config-zip \
-  --resource-group looper              \
-  --name           loopersignaling     \
+  --resource-group "$GROUPNAME"        \
+  --name           "$APPNAME"          \
   --src            signalingserver.zip
