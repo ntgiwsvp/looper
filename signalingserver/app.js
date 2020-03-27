@@ -1,9 +1,10 @@
 "use strict";
 
+var sockets;
 const http = require("http");
 const WebSocket = require("ws"); // See https://github.com/websockets/ws
 
-var sockets;
+const port = process.env.PORT || 8080;
 
 startServer();
 
@@ -11,12 +12,17 @@ function startServer()
 {
   var server, wss;
 
-  server = http.createServer();
+  server = http.createServer(dummyStatusMessage);
   wss = new WebSocket.Server({server: server});
   sockets = {};
   wss.on("connection", initializeConnection);
-  console.log("Ready to signal.");
-  server.listen(8080);
+  server.listen(port);
+}
+
+function dummyStatusMessage(request, response)
+{
+  response.writeHead(200, {"Content-Type": "text/plain"});
+  response.end("Signaling server is running.");
 }
 
 function initializeConnection(socket, request)

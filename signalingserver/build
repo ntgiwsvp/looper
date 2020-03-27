@@ -3,6 +3,5 @@
 # This builds a deployment ZIP package file as described on
 # https://docs.microsoft.com/en-us/azure/app-service/deploy-run-package
 
-zip -r signalingserver.zip \
-  node_modules             \
-  app.js
+rm -f signalingserver.zip
+zip -r signalingserver.zip node_modules app.js
