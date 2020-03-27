@@ -2,8 +2,7 @@
 
 var signalingChannel, ownId, clientId; // for Websocket 
 var connection; // For RTC
-var recorder, chunks; // for recording
-var audioContext; // for Web Audio API
+var audioContext, outputNode, gainNode, delayNode; // for Web Audio API
 
 document.addEventListener("DOMContentLoaded", initDocument);
 
@@ -11,13 +10,28 @@ function initDocument()
 {
   console.log("Adding event handlers to DOM.");
   document.getElementById("startServerButton").onclick = startServer;
-  document.getElementById("stopRecordingButton").onclick = stopRecording;
 }
 
 function startServer()
 {
   console.log("Creating audio contect.");
   audioContext = new AudioContext(); // Use OfflineAudioContext for server?
+
+  console.log("Creating audio nodes.")
+  outputNode = new MediaStreamAudioDestinationNode(audioContext);
+  gainNode   = new GainNode(audioContext, {gain: 0.9});
+  delayNode  = new DelayNode(audioContext, {delayTime: 1.0, maxDelayTime: 1.0});
+
+  console.log("Connecting audio nodes.")
+  delayNode.connect(gainNode);
+  gainNode .connect(delayNode);
+  gainNode .connect(outputNode);
+  //                   delayNode
+  //                    |    A
+  //                    V    |
+  //     inputNodes -> gainNode -> outputNode
+  //
+  // (inputNodes are created when remote tracks are received.)
 
   console.log("Creating RTC connection");
   connection  = new RTCPeerConnection({iceServers: [
@@ -96,70 +110,20 @@ function sendIceCandidate(event)
 
 function gotRemoteTrack(event)
 {
-  var inputNode, gainNode, delayNode, outputNode, tracks;
+  var inputNode, tracks;
 
-  console.log("Got remote media stream.")
+  console.log("Got remote media stream track.")
 
   console.log("Creating audio nodes.")
-  // Should be replaced by MediaStreamTrackAudioSourceNode according to 
-  // https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamAudioSourceNode
-  inputNode  = new MediaStreamTrackAudioSourceNode(audioContext, {mediaStreamTrack: event.track});
-  outputNode = new MediaStreamAudioDestinationNode(audioContext);
-  gainNode   = new GainNode                       (audioContext, {gain:             0.9});
-  delayNode  = new DelayNode                      (audioContext, {delayTime:        1.0,
-                                                                  maxDelayTime:     1.0});
+  inputNode  = new MediaStreamTrackAudioSourceNode(audioContext,
+    {mediaStreamTrack: event.track});
   
   console.log("Connecting audio nodes.")
   inputNode.connect(gainNode);
-  delayNode.connect(gainNode);
-  gainNode .connect(delayNode);
-  gainNode .connect(outputNode);
-  //                   delayNode
-  //                    |    A
-  //                    V    |
-  //      inputNode -> gainNode -> outputNode
 
   console.log("Sending output to client.");
   tracks = outputNode.stream.getAudioTracks();
   connection.addTrack(tracks[0]);
-
-  // Record output
-  startRecording(outputNode.stream); 
-}
-
-function startRecording(stream)
-{
-  console.log("Starting recording.")
-  recorder = new MediaRecorder(stream);
-  chunks = [];
-  recorder.ondataavailable = pushChunk;
-  recorder.onstop = combineChunks;
-  recorder.start();
-}
-
-function pushChunk(event)
-{
-  console.log("Pushing chunk.");
-  chunks.push(event.data);
-}
-
-function stopRecording()
-{
-  recorder.stop();
-}
-
-function combineChunks()
-{
-  console.log("Combining chunks.");
-  var downloadButton, blob;
-
-  if(!chunks)            {console.log("Chunks not initialized"); return;}
-  if(chunks.lenght == 0) {console.log("No chunks recorded");     return;}
-  
-  blob = new Blob(chunks, {type: chunks[0].type});
-  downloadButton = document.getElementById("downloadButton");
-  downloadButton.href = URL.createObjectURL(blob);
-  downloadButton.download = "recording.oga";
 }
 
 function signal(message)
