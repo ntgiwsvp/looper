@@ -33,3 +33,42 @@ function startMetronome()
   modulatorNode.start();
   oscillatorNode.start();
 }
+
+// Backup: Code for recording streams
+
+var recorder, chunks;
+
+function startRecording(stream)
+{
+  console.log("Starting recording.")
+  recorder = new MediaRecorder(stream);
+  chunks = [];
+  recorder.ondataavailable = pushChunk;
+  recorder.onstop = combineChunks;
+  recorder.start();
+}
+
+function pushChunk(event)
+{
+  console.log("Pushing chunk.");
+  chunks.push(event.data);
+}
+
+function stopRecording()
+{
+  recorder.stop();
+}
+
+function combineChunks()
+{
+  console.log("Combining chunks.");
+  var downloadButton, blob;
+
+  if(!chunks)            {console.log("Chunks not initialized"); return;}
+  if(chunks.lenght == 0) {console.log("No chunks recorded");     return;}
+  
+  blob = new Blob(chunks, {type: chunks[0].type});
+  downloadButton = document.getElementById("downloadButton");
+  downloadButton.href = URL.createObjectURL(blob);
+  downloadButton.download = "recording.oga";
+}
