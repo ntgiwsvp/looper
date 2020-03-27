@@ -20,7 +20,8 @@ function startServer()
   audioContext = new AudioContext(); // Use OfflineAudioContext for server?
 
   console.log("Creating RTC connection");
-  connection                         = new RTCPeerConnection();
+  connection  = new RTCPeerConnection({iceServers: [
+    {urls: "stun:stun.l.google.com:19302"}]});
   connection.onicecandidate          = sendIceCandidate;
   connection.ontrack                 = gotRemoteTrack
   connection.onconnectionstatechange = reportConnectionState;
