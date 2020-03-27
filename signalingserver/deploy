@@ -1,0 +1,6 @@
+#!/bin/sh
+
+az webapp deployment source config-zip \
+  --resource-group looper              \
+  --name           loopersignaling     \
+  --src            signalingserver.zip

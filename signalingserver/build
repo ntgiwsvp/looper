@@ -1,0 +1,6 @@
+#!/bin/sh
+
+zip -r signalingserver.zip \
+  node_modules             \
+  package.json             \
+  signalingserver.js
