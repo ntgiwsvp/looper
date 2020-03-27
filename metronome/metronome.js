@@ -1,5 +1,7 @@
 'use strict';
 
+var audioContext;
+
 document.addEventListener("DOMContentLoaded", initDocument);
 
 // We start by associating the event handlers to the frontend.
@@ -7,16 +9,18 @@ function initDocument()
 {
   console.log("Adding event handlers to DOM.")
   document.getElementById("startButton").onclick = startMetronome;
+  document.getElementById("printTimestampsButton").onclick = printTimestamps;
 }
 
 function startMetronome()
 {
-  var audioContext, oscillatorNode, gainNode, modulatorNode;
+  var oscillatorNode, gainNode, modulatorNode;
 
   console.log("Starting metronome.");
 
   console.log("Creating audio contect.");
-  audioContext = new AudioContext(); // Use OfflineAudioContext for server!
+  audioContext = new AudioContext({sampleRate: 44100});
+  audioContext.destination.channelCount = 1;
 
   console.log("Creating audio nodes.");
   oscillatorNode = new OscillatorNode(audioContext);
@@ -32,6 +36,26 @@ function startMetronome()
   console.log("Starting nodes.")
   modulatorNode.start();
   oscillatorNode.start();
+
+  console.log("Audio context properties:")
+  console.log("  Base latency: %.3f s.", audioContext.baseLatency);
+  console.log("  Output latency: %.3f s.", audioContext.outputLatency);
+  console.log("  Sample rate: %.0f", audioContext.sampleRate);
+}
+
+function printTimestamps()
+{
+  const now = performance.now();
+  const outputTimestamp = audioContext.getOutputTimestamp();
+  const currentTime = audioContext.currentTime;
+
+  console.log("Timestamps:")
+  console.log("  context time:    %.3f s", outputTimestamp.contextTime);
+  console.log("  current time:    %.3f s", currentTime);
+  console.log("    difference:    %.3f s", currentTime - outputTimestamp.contextTime);
+  console.log("  performanceTime: %.3f s", outputTimestamp.performanceTime/1000);
+  console.log("  now:             %.3f s", now/1000);
+  console.log("    difference:    %.3f s", (now - outputTimestamp.performanceTime)/1000);
 }
 
 // Backup: Code for recording streams
