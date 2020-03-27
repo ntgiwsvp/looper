@@ -1,0 +1,12 @@
+#!/bin/sh
+
+az storage blob upload-batch --account-name looperfrontend \
+                              -d '$web'                    \
+                              -s .                         \
+                             --pattern '*.js'
+
+az storage blob upload-batch --account-name looperfrontend \
+                              -d '$web'                    \
+                              -s .                         \
+                             --pattern '*.html'
+                             
