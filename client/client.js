@@ -24,7 +24,7 @@ async function startStream()
   audioContext = new AudioContext();
 
   console.log("Creating connection to signaling server.");
-  signalingChannel                   = new WebSocket("ws://localhost:8080/");
+  signalingChannel = new WebSocket("wss://loopersignaling.azurewebsites.net/");
   signalingChannel.onmessage         = receiveMessage;
   // XXX Dirty trick that needs to be corrected:  Time to setup WebSocket
   //     is hidden while user is approving media acces.  Should use

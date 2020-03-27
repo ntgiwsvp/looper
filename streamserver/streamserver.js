@@ -26,7 +26,7 @@ function startServer()
   connection.onconnectionstatechange = reportConnectionState;
   
   console.log("Creating connection to signaling server.");
-  signalingChannel                   = new WebSocket("ws://localhost:8080/")
+  signalingChannel = new WebSocket("wss://loopersignaling.azurewebsites.net/")
   signalingChannel.onmessage         = receiveMessage;
 
   console.log("Waiting for offers.")
