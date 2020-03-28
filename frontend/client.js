@@ -21,7 +21,7 @@ async function startStream()
   console.log("Joining session %s.", sessionId);
 
   console.log("Creating audio contect.");
-  audioContext = new AudioContext();
+  audioContext = new AudioContext({sampleRate: 48000});
 
   console.log("Creating connection to signaling server.");
   signalingChannel = new WebSocket("wss://loopersignaling.azurewebsites.net/");

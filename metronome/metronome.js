@@ -19,7 +19,7 @@ function startMetronome()
   console.log("Starting metronome.");
 
   console.log("Creating audio contect.");
-  audioContext = new AudioContext({sampleRate: 44100});
+  audioContext = new AudioContext({sampleRate: 48000});
   audioContext.destination.channelCount = 1;
 
   console.log("Creating audio nodes.");

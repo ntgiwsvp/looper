@@ -15,7 +15,7 @@ function initDocument()
 function startServer()
 {
   console.log("Creating audio contect.");
-  audioContext = new AudioContext(); // Use OfflineAudioContext for server?
+  audioContext = new AudioContext({sampleRate: 48000});
 
   console.log("Creating audio nodes.")
   outputNode = new MediaStreamAudioDestinationNode(audioContext);
