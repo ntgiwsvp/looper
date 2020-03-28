@@ -4,8 +4,6 @@ var signalingChannel, ownId, clientId; // for Websocket
 var connection; // For RTC
 var audioContext, outputNode, gainNode, delayNode; // for Web Audio API
 
-const sampleRate = 44100;
-
 document.addEventListener("DOMContentLoaded", initDocument);
 
 function initDocument()
