@@ -4,6 +4,8 @@ var signalingChannel, ownId, sessionId; // for Websocket
 var connection; // for RTC
 var audioContext; // for Web Audio API
 
+const sampleRate = 44100;
+
 document.addEventListener("DOMContentLoaded", initDocument);
 
 // We start by associating the event handlers to the frontend.
@@ -21,7 +23,7 @@ async function startStream()
   console.log("Joining session %s.", sessionId);
 
   console.log("Creating audio contect.");
-  audioContext = new AudioContext({sampleRate: 48000});
+  audioContext = new AudioContext({sampleRate});
 
   console.log("Creating connection to signaling server.");
   signalingChannel = new WebSocket("wss://loopersignaling.azurewebsites.net/");

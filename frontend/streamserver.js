@@ -4,6 +4,8 @@ var signalingChannel, ownId, clientId; // for Websocket
 var connection; // For RTC
 var audioContext, outputNode, gainNode, delayNode; // for Web Audio API
 
+const sampleRate = 44100;
+
 document.addEventListener("DOMContentLoaded", initDocument);
 
 function initDocument()
@@ -15,7 +17,7 @@ function initDocument()
 function startServer()
 {
   console.log("Creating audio contect.");
-  audioContext = new AudioContext({sampleRate: 48000});
+  audioContext = new AudioContext({sampleRate});
 
   console.log("Creating audio nodes.")
   outputNode = new MediaStreamAudioDestinationNode(audioContext);
