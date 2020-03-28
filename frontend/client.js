@@ -24,15 +24,14 @@ async function startStream()
   audioContext = new AudioContext({sampleRate});
 
   console.log("Creating connection to signaling server.");
-  signalingChannel = new WebSocket("wss://loopersignaling.azurewebsites.net/");
+  signalingChannel = new WebSocket(signalingServerUrl);
   signalingChannel.onmessage         = receiveMessage;
   // XXX Dirty trick that needs to be corrected:  Time to setup WebSocket
   //     is hidden while user is approving media acces.  Should use
   //     WebSocket.onopen to make sure not to send messages too early.
 
   console.log("Creating RTC connection.")
-  connection = new RTCPeerConnection({iceServers: [
-    {urls: "stun:stun.l.google.com:19302"}]});
+  connection = new RTCPeerConnection({iceServers: [{urls: stunServerUrl}]});
   connection.onicecandidate          = sendIceCandidate;
   connection.ontrack                 = gotRemoteTrack;
   connection.onconnectionstatechange = reportConnectionState;

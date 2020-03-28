@@ -34,14 +34,13 @@ function startServer()
   // (inputNodes are created when remote tracks are received.)
 
   console.log("Creating RTC connection");
-  connection  = new RTCPeerConnection({iceServers: [
-    {urls: "stun:stun.l.google.com:19302"}]});
+  connection  = new RTCPeerConnection({iceServers: [{urls: stunServerUrl}]});
   connection.onicecandidate          = sendIceCandidate;
   connection.ontrack                 = gotRemoteTrack
   connection.onconnectionstatechange = reportConnectionState;
   
   console.log("Creating connection to signaling server.");
-  signalingChannel = new WebSocket("wss://loopersignaling.azurewebsites.net/")
+  signalingChannel = new WebSocket(signalingServerUrl)
   signalingChannel.onmessage         = receiveMessage;
 
   console.log("Waiting for offers.")
