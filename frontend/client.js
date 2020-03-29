@@ -56,37 +56,41 @@ async function startStream()
   signal({offer: description});
 }
 
-async function receiveMessage(message)
+function receiveMessage(message)
 {
   var data;
 
   data = JSON.parse(message.data);
 
-  if (data.id)
-  {
-    ownId = data.id;
-    console.log("Received own ID: %d.", ownId);
-  }
+  if (data.id)           receiveIdMessage(data);
+  if (data.answer)       receiveAnswerMessage(data);
+  if (data.iceCandidate) receiveIceCandidateMessage(data);
+}
 
-  if (data.answer)
-  {
-    console.log("Received answer.")
-    console.log(data.answer);
+function receiveIdMessage(data)
+{
+  ownId = data.id;
+  console.log("Received own ID: %d.", ownId);
+}
 
-    console.log("Setting remote description.")
-    await connection.setRemoteDescription(data.answer);
-    console.log("Remote description set.");
-  }
+async function receiveAnswerMessage(data)
+{
+  console.log("Received answer.")
+  console.log(data.answer);
 
-  if (data.iceCandidate)
-  {
-    console.log("Received ICE candidate.");
-    console.log(data.iceCandidate);
+  console.log("Setting remote description.")
+  await connection.setRemoteDescription(data.answer);
+  console.log("Remote description set.");
+}
 
-    console.log("Adding ICE candidate to connection.");
-    await connection.addIceCandidate(data.iceCandidate);
-    console.log("ICE candidate added to connection.");
-  }
+async function receiveIceCandidateMessage(data)
+{
+  console.log("Received ICE candidate.");
+  console.log(data.iceCandidate);
+
+  console.log("Adding ICE candidate to connection.");
+  await connection.addIceCandidate(data.iceCandidate);
+  console.log("ICE candidate added to connection.");
 }
 
 function reportConnectionState(event)
