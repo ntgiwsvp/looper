@@ -46,56 +46,62 @@ function reportConnectionState(event)
   console.log("Connection state: %s.", connection.connectionState)
 }
 
-async function receiveMessage(message)
+function receiveMessage(message)
 {
-  var data, description;
+  var data;
 
   data = JSON.parse(message.data);
 
-  if (data.id)
-  {
-    ownId = data.id;
-    console.log("Received own ID: %d.", ownId);
-    document.getElementById("sessionId").innerHTML = ownId;
-  }
+  if (data.id)           receiveIdMessage(data);
+  if (data.offer)        receiveOfferMessage(data);
+  if (data.iceCandidate) receiveIceCandidateMessage(data);
+}
 
-  if (data.offer)
-  {
-    clientId = data.from;
-    
-    console.log("Received offer from %s.", clientId)
-    console.log(data.offer);
+function receiveIdMessage(data)
+{
+  ownId = data.id;
+  console.log("Received own ID: %d.", ownId);
+  document.getElementById("sessionId").innerHTML = ownId;
+}
 
-    console.log("Creating RTC connection");
-    connection  = new RTCPeerConnection({iceServers: [{urls: stunServerUrl}]});
-    connection.onicecandidate          = sendIceCandidate;
-    connection.ontrack                 = gotRemoteTrack
-    connection.onconnectionstatechange = reportConnectionState;
-    
-    console.log("Setting remote description.");
-    await connection.setRemoteDescription(data.offer);
-    console.log("Remote description set.");
+async function receiveOfferMessage(data)
+{
+  var description;
+
+  clientId = data.from;
   
-    console.log("Creating answer.");
-    description = await connection.createAnswer();
+  console.log("Received offer from %s.", clientId)
+  console.log(data.offer);
+
+  console.log("Creating RTC connection");
+  connection  = new RTCPeerConnection({iceServers: [{urls: stunServerUrl}]});
+  connection.onicecandidate          = sendIceCandidate;
+  connection.ontrack                 = gotRemoteTrack
+  connection.onconnectionstatechange = reportConnectionState;
   
-    console.log("Setting local description.")
-    await connection.setLocalDescription(description);
-    console.log("Local description set.");
+  console.log("Setting remote description.");
+  await connection.setRemoteDescription(data.offer);
+  console.log("Remote description set.");
 
-    console.log("Sending answer.")
-    signal({answer: description});
-  }
+  console.log("Creating answer.");
+  description = await connection.createAnswer();
 
-  if (data.iceCandidate)
-  {
-    console.log("Received ICE candidate.");
-    console.log(data.iceCandidate);
+  console.log("Setting local description.")
+  await connection.setLocalDescription(description);
+  console.log("Local description set.");
 
-    console.log("Adding ICE candidate to connection.");
-    await connection.addIceCandidate(data.iceCandidate);
-    console.log("ICE candidate added to connection.");
-  }
+  console.log("Sending answer.")
+  signal({answer: description});
+}
+
+async function receiveIceCandidateMessage(data)
+{
+  console.log("Received ICE candidate.");
+  console.log(data.iceCandidate);
+
+  console.log("Adding ICE candidate to connection.");
+  await connection.addIceCandidate(data.iceCandidate);
+  console.log("ICE candidate added to connection.");
 }
 
 function sendIceCandidate(event)
