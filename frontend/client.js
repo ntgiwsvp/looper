@@ -22,6 +22,7 @@ async function startStream()
 
   console.log("Creating audio contect.");
   audioContext = new AudioContext({sampleRate});
+  console.log("Audio context sample rate: %.0f Hz.", audioContext.sampleRate);
 
   console.log("Creating connection to signaling server.");
   signalingChannel = new WebSocket(signalingServerUrl);

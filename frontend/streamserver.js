@@ -16,6 +16,7 @@ function startServer()
 {
   console.log("Creating audio contect.");
   audioContext = new AudioContext({sampleRate});
+  console.log("Audio context sample rate: %.0f Hz.", audioContext.sampleRate);
 
   console.log("Creating audio nodes.")
   outputNode = new MediaStreamAudioDestinationNode(audioContext);
