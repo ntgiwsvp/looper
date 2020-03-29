@@ -12,23 +12,25 @@ function initDocument()
   document.getElementById("printButton").onclick = print;
 }
 
-var f, R, analyser0, analyser90, dataArray0, dataArray90;
+var f, f_s, R, analyser0, analyser90, dataArray0, dataArray90;
 
-function start()
+async function start()
 {
-  var audioContext, tmp, REF_0deg, REF_90deg, X, Y0, Y90, Y0F, Y90F;
+  var mediaStream, audioContext, track, i;
+  var tmp, REF_0deg, REF_90deg, X, Y0, Y90, Y0F, Y90F;
 
-  const f_s = 100000;
+  audioContext = new AudioContext();
+
+  f = 1000; // frequency of reference signal
+  R = 1.0;    // amplitude of reference signal
+  f_s = audioContext.sampleRate;
   const alpha = 0.99999;
-  console.log("Corner freqency: %.2f Hz.", -f_s*Math.log(alpha)/(2*Math.PI));
-  
   const feedforward = [1 - alpha];
   const feedback = [1, -alpha];
 
-  f = 1000; // frequency of reference signal
-  R = 0.7;    // amplitude of reference signal
+  console.log("Corner freqency: %.2f Hz.", -f_s*Math.log(alpha)/(2*Math.PI));
+  
 
-  audioContext = new AudioContext({sampleRate: f_s});
   // Dusan Ponikvar's STM32F407 project, see
   // https://www.fmf.uni-lj.si/~ponikvar/STM32f407.htm, Chapter 23.
   // (He also as a PDF
@@ -44,15 +46,41 @@ function start()
   Y0F       = new IIRFilterNode (audioContext, {feedforward, feedback});
   Y90F      = new IIRFilterNode (audioContext, {feedforward, feedback});
 
+  if(true)
+  {
+    mediaStream =  await navigator.mediaDevices.getUserMedia({audio: {
+      echoCancellation: false,
+      noiseSuppression: false,
+      channelCount:     1}});
+    console.log(mediaStream);
+    track = mediaStream.getAudioTracks()[0];
+
+    X = new MediaStreamAudioSourceNode(audioContext, {mediaStream});
+    REF_0deg .connect(audioContext.destination);
+  }
+  else // test setup
+  {
+    X       = new DelayNode     (audioContext, {delayTime: 0.123/f});
+    REF_0deg.connect(X);    
+  }
+
   tmp      .connect(REF_0deg);
   REF_0deg .connect(REF_90deg);
-  REF_0deg .connect(X);
   REF_0deg .connect(Y0.gain);
   REF_90deg.connect(Y90.gain);
   X        .connect(Y0);
   X        .connect(Y90);
   Y0       .connect(Y0F);
   Y90      .connect(Y90F);
+
+  if(true)
+  {
+
+  }
+  else // test setup
+  {
+
+  }
 
   tmp.start();
 
@@ -75,6 +103,7 @@ function print()
   A = 2/R*Math.sqrt(dataArray0[0]**2 + dataArray90[0]**2);
   phi = Math.atan2(dataArray90[0], dataArray0[0]);
   
-  console.log("channel gain: %.3f, phi/(2 pi) = %.3f.", A/R, phi/(2*Math.PI));
+  console.log("channel gain: %.3f, latency = %.1f samples (of %.1f)",
+    A/R, phi/(2*Math.PI)*f_s/f, f_s/f);
 }
 
