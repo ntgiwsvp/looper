@@ -34,12 +34,6 @@ function startServer()
   //
   // (inputNodes are created when remote tracks are received.)
 
-  console.log("Creating RTC connection");
-  connection  = new RTCPeerConnection({iceServers: [{urls: stunServerUrl}]});
-  connection.onicecandidate          = sendIceCandidate;
-  connection.ontrack                 = gotRemoteTrack
-  connection.onconnectionstatechange = reportConnectionState;
-  
   console.log("Creating connection to signaling server.");
   signalingChannel = new WebSocket(signalingServerUrl)
   signalingChannel.onmessage         = receiveMessage;
@@ -72,6 +66,12 @@ async function receiveMessage(message)
     console.log("Received offer from %s.", clientId)
     console.log(data.offer);
 
+    console.log("Creating RTC connection");
+    connection  = new RTCPeerConnection({iceServers: [{urls: stunServerUrl}]});
+    connection.onicecandidate          = sendIceCandidate;
+    connection.ontrack                 = gotRemoteTrack
+    connection.onconnectionstatechange = reportConnectionState;
+    
     console.log("Setting remote description.");
     await connection.setRemoteDescription(data.offer);
     console.log("Remote description set.");
