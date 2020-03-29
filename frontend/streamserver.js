@@ -109,13 +109,15 @@ function sendIceCandidate(event)
 
 function gotRemoteTrack(event)
 {
-  var inputNode, tracks;
+  var mediaStream, inputNode, tracks;
 
   console.log("Got remote media stream track.")
 
+  console.log("Creating media stream.")
+  mediaStream = new MediaStream([event.track]);
+
   console.log("Creating audio nodes.")
-  inputNode  = new MediaStreamTrackAudioSourceNode(audioContext,
-    {mediaStreamTrack: event.track});
+  inputNode  = new MediaStreamAudioSourceNode(audioContext, {mediaStream});
   
   console.log("Connecting audio nodes.")
   inputNode.connect(gainNode);
