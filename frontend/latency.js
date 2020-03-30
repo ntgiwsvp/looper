@@ -52,7 +52,7 @@ var audioContext, f_s, dataArray;
 
 async function start()
 {
-  var mediaStream, audioContext, track;
+  var mediaStream, audioContext;
   var tmp, REF_0deg, REF_90deg, X, Y0, Y90, Y0F, Y90F, i, analyser, merger;
 
   audioContext = new AudioContext();
@@ -80,7 +80,6 @@ async function start()
     noiseSuppression: false,
     channelCount:     1}});
   console.log(mediaStream);
-  track = mediaStream.getAudioTracks()[0];
   X = new MediaStreamAudioSourceNode(audioContext, {mediaStream});
 
   if (test) X = new DelayNode(audioContext, {delayTime: 0.1234});
