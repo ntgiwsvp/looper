@@ -4,24 +4,25 @@
 // latency instead.
 const test = false;
 
+const f0 = 2000;
 
 // 13 test frequencies - using basically the same ones as jack-delay,
 // just there they are specified relative to the sample rate, here
-// we just set fixed values.  They correspond to jack-delay's values at
+// we just set fixed values.  f0 = 3000 corresponds to jack-delay's values at
 // 48000 Hz.
-const f = [        3000,
-            1/   2*3000,
-            3/   4*3000,
-            5/   8*3000,
-            9/  16*3000,
-           17/  32*3000,
-           17/  64*3000,
-           41/ 128*3000,
-           97/ 256*3000,
-          225/ 512*3000,
-          833/1024*3000,
-         1793/2048*3000,
-         3841/4096*3000];
+const f = [        f0,
+            1/   2*f0,
+            3/   4*f0,
+            5/   8*f0,
+            9/  16*f0,
+           17/  32*f0,
+           17/  64*f0,
+           41/ 128*f0,
+           97/ 256*f0,
+          225/ 512*f0,
+          833/1024*f0,
+         1793/2048*f0,
+         3841/4096*f0];
 
 // Amplitude of each of the 13 test frequencies.  For now just use 1/13 for
 // each.  Other options: Could put higher ones to the frequencies where
@@ -173,6 +174,9 @@ function print()
   }
   console.log("Final latency estimate: %.2f ms", 1000*latency);
   console.groupEnd();  
+
+  document.getElementById("outputSpan").innerHTML =
+    (1000 * latency).toFixed() + " ms";
 }
 
 // The representative in [0, 1) of x + Z
