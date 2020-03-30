@@ -12,11 +12,11 @@ function initDocument()
   document.getElementById("printButton").onclick = print;
 }
 
-var f, f_s, R, analyser0, analyser90, dataArray0, dataArray90;
+var f, f_s, R, analyser, dataArray;
 
 async function start()
 {
-  var mediaStream, audioContext, track;
+  var mediaStream, audioContext, track, merger;
   var tmp, REF_0deg, REF_90deg, X, Y0, Y90, Y0F, Y90F, i;
 
   const test = true;
@@ -62,8 +62,6 @@ async function start()
   Y90       = [];
   Y0F       = [];
   Y90F      = [];
-  analyser0 = [];
-  analyser90 = [];
 
   mediaStream =  await navigator.mediaDevices.getUserMedia({audio: {
     echoCancellation: false,
@@ -74,7 +72,15 @@ async function start()
   X = new MediaStreamAudioSourceNode(audioContext, {mediaStream});
 
   if (test) X = new DelayNode(audioContext, {delayTime: 5/f_s});
-  
+
+  merger = new ChannelMergerNode(audioContext, {numberOfInputs: 26});
+
+  analyser   = audioContext.createScriptProcessor(0, 26, 0);
+  dataArray = new Float32Array(26);
+  analyser.onaudioprocess = savePhaseValues;
+
+  merger.connect(analyser);
+
   for (i = 0; i < 13; i++)
   {
     tmp      [i] = new OscillatorNode(audioContext, {frequency: f[i]});           
@@ -97,17 +103,20 @@ async function start()
 
     tmp[i].start();
 
-    // Abuse analyser to get samples, as in the MDN oscilloscope examples.
-    analyser0 [i] = new AnalyserNode(audioContext, {fftSize: 32});
-    analyser90[i] = new AnalyserNode(audioContext, {fftSize: 32});
-    Y0F       [i].connect(analyser0[i]);
-    Y90F      [i].connect(analyser90[i]);
+    Y0F       [i].connect(merger, 0,      i);
+    Y90F      [i].connect(merger, 0, 13 + i);
   }
   
   if (test) for (i = 0; i < 13; i++) REF_0deg[i].connect(X);
   
-  dataArray0  = new Float32Array(1);
-  dataArray90 = new Float32Array(1);
+}
+
+function savePhaseValues(event)
+{
+  var i;
+
+  for (i = 0; i < event.inputBuffer.numberOfChannels; i++)
+    dataArray[i] = event.inputBuffer.getChannelData(i)[0]
 }
 
 function print()
@@ -118,11 +127,8 @@ function print()
 
   for (i = 0; i < 13; i++)
   {
-    analyser0[i].getFloatTimeDomainData(dataArray0);
-    analyser90[i].getFloatTimeDomainData(dataArray90);
-
-    A = 2/R[i]*Math.sqrt(dataArray0[0]**2 + dataArray90[0]**2);
-    phi = Math.atan2(dataArray90[0], dataArray0[0]);
+    A = 2/R[i]*Math.sqrt(dataArray[i]**2 + dataArray[13+i]**2);
+    phi = Math.atan2(dataArray[13+i], dataArray[i]);
     
     console.log("%.0f Hz: channel gain: %.3f, latency = %.1f samples (of %.1f)",
       f[i], A/R[i], phi/(2*Math.PI)*f_s/f[i], f_s/f[i]);
