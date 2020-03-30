@@ -82,7 +82,7 @@ async function start()
   track = mediaStream.getAudioTracks()[0];
   X = new MediaStreamAudioSourceNode(audioContext, {mediaStream});
 
-  if (test) X = new DelayNode(audioContext, {delayTime: 0.0001});
+  if (test) X = new DelayNode(audioContext, {delayTime: 0.1234});
 
   merger = new ChannelMergerNode(audioContext, {numberOfInputs: 26});
 
@@ -131,21 +131,68 @@ function savePhaseValues(event)
 
 function print()
 {
-  var A, phi, i;
+  var i, A, phi, phase, shift, latency, difference1, difference2, potentialAdjustment;
 
   console.group("Latency detection");
 
   for (i = 0; i < 13; i++)
   {
-    A   = 2/R[i]*Math.sqrt(dataArray[i]**2 + dataArray[13+i]**2);
-    phi = Math.atan2(dataArray[13+i], dataArray[i]);
-
-    console.group("%d) %.0f Hz", i, f[i]);
+    A     = 2/R[i]*Math.sqrt(dataArray[i]**2 + dataArray[13+i]**2);
+    phi   = Math.atan2(dataArray[13+i], dataArray[i]);
+    phase = frac(phi/(2*Math.PI));
+    shift = phase/f[i];
+  
+    console.group("%d. Determining latency mod %.2f ms", i, 2**i*1000/f[0]);
+    console.log("Test frequency %.0f Hz, period %.2f ms", f[i], 1000/f[i]);
     console.log("Gain: %.3f", A/R[i]);
-    console.log("Latency: %.2f ms", 1000*phi/(2*Math.PI*f[i]));
-    console.groupEnd();
+    console.log("Shift: %.2f ms", 1000*shift);
 
+    if (i == 0)
+    {
+      latency = shift;
+    }
+    else
+    {
+      potentialAdjustment = 2**(i - 1)/f[0];
+      console.log("Candidates are %.2f and %.2f",
+        1000*latency,
+        1000*(latency + potentialAdjustment));
+      
+      difference1 = cmod(latency                       - shift, 1/f[i]);
+      difference2 = cmod(latency + potentialAdjustment - shift, 1/f[i]);
+
+      console.log("Differences are %.2f ms and %.2f ms, respectively",
+        1000*difference1, 1000*difference2);
+
+      if (Math.abs(difference2) < Math.abs(difference1))
+        latency += potentialAdjustment;
+    }
+    console.log("Latency is %.2f ms mod %.2f ms.",
+      1000 * latency, 1000 * 2**i / f[0])
+    console.groupEnd();
   }
+  console.log("Final latency estimate: %.2f ms", 1000*latency);
   console.groupEnd();  
+}
+
+// The representative in [0, 1) of x + Z
+function frac(x)
+{
+  return x - Math.floor(x);
+}
+
+function mod(x, m)
+{
+  return m*frac(x/m);
+}
+
+function cfrac(x)
+{
+  return frac(x + 1/2) - 1/2;
+}
+
+function cmod(x, m)
+{
+  return m*cfrac(x/m);
 }
 
