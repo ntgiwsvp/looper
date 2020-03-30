@@ -51,7 +51,7 @@ async function start()
 
   // Dusan Ponikvar's STM32F407 project, see
   // https://www.fmf.uni-lj.si/~ponikvar/STM32f407.htm, Chapter 23.
-  // (He also as a PDF
+  // (He also has a PDF
   // https://www.fmf.uni-lj.si/~ponikvar/PDFji/Phase%20angle%20measurements.pdf
   // with similar content, not read this one yet.)
 
