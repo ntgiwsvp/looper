@@ -79,6 +79,9 @@ async function receiveOfferMessage(data)
   connection.ontrack                 = gotRemoteTrack
   connection.onconnectionstatechange = reportConnectionState;
   
+  console.log("Sending output to client.");
+  connection.addTrack(outputNode.stream.getAudioTracks()[0]);
+
   console.log("Setting remote description.");
   await connection.setRemoteDescription(data.offer);
   console.log("Remote description set.");
@@ -116,7 +119,7 @@ function sendIceCandidate(event)
 
 function gotRemoteTrack(event)
 {
-  var mediaStream, inputNode, tracks;
+  var mediaStream, inputNode;
 
   console.log("Got remote media stream track.")
 
@@ -128,10 +131,6 @@ function gotRemoteTrack(event)
   
   console.log("Connecting audio nodes.")
   inputNode.connect(gainNode);
-
-  console.log("Sending output to client.");
-  tracks = outputNode.stream.getAudioTracks();
-  connection.addTrack(tracks[0]);
 }
 
 function signal(message)
