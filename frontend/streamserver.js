@@ -21,7 +21,8 @@ function startServer()
   console.log("Creating audio nodes.")
   outputNode = new MediaStreamAudioDestinationNode(audioContext);
   gainNode   = new GainNode(audioContext, {gain: 0.9});
-  delayNode  = new DelayNode(audioContext, {delayTime: 1.0, maxDelayTime: 1.0});
+  delayNode  = new DelayNode(audioContext, {delayTime:    loopLength,
+                                            maxDelayTime: loopLength});
 
   console.log("Connecting audio nodes.")
   delayNode.connect(gainNode);
