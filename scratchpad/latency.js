@@ -2,7 +2,7 @@
 
 // Set this to true to shortcut the channel and work with a fixed
 // latency instead.
-const test = false;
+const test = true;
 
 
 // 13 test frequencies - using basically the same ones as jack-delay,
@@ -82,7 +82,7 @@ async function start()
   track = mediaStream.getAudioTracks()[0];
   X = new MediaStreamAudioSourceNode(audioContext, {mediaStream});
 
-  if (test) X = new DelayNode(audioContext, {delayTime: 10/f_s});
+  if (test) X = new DelayNode(audioContext, {delayTime: 0.0001});
 
   merger = new ChannelMergerNode(audioContext, {numberOfInputs: 26});
 
@@ -133,15 +133,19 @@ function print()
 {
   var A, phi, i;
 
-  console.log("---");
+  console.group("Latency detection");
 
   for (i = 0; i < 13; i++)
   {
-    A = 2/R[i]*Math.sqrt(dataArray[i]**2 + dataArray[13+i]**2);
+    A   = 2/R[i]*Math.sqrt(dataArray[i]**2 + dataArray[13+i]**2);
     phi = Math.atan2(dataArray[13+i], dataArray[i]);
-    
-    console.log("%.0f Hz: channel gain: %.3f, latency = %.1f samples (of %.1f)",
-      f[i], A/R[i], phi/(2*Math.PI)*f_s/f[i], f_s/f[i]);
+
+    console.group("%d) %.0f Hz", i, f[i]);
+    console.log("Gain: %.3f", A/R[i]);
+    console.log("Latency: %.2f ms", 1000*phi/(2*Math.PI*f[i]));
+    console.groupEnd();
+
   }
+  console.groupEnd();  
 }
 
