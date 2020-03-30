@@ -2,7 +2,7 @@
 
 // Set this to true to shortcut the channel and work with a fixed
 // latency instead.
-const test = true;
+const test = false;
 
 
 // 13 test frequencies - using basically the same ones as jack-delay,
