@@ -38,7 +38,10 @@ async function startStream()
   connection.onconnectionstatechange = reportConnectionState;
 
   console.log("Getting user media.");
-  stream = await navigator.mediaDevices.getUserMedia({audio: true});
+  stream = await navigator.mediaDevices.getUserMedia({audio: {
+    echoCancellation: false,
+    noiseSuppression: false,
+    channelCount:     1}});
 
   console.log("Adding track to connection.");
   tracks = stream.getAudioTracks();
