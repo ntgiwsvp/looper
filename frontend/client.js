@@ -113,7 +113,7 @@ function sendIceCandidate(event)
 
 function gotRemoteTrack(event)
 {
-  var mediaStream, inputNode;
+  var mediaStream, inputNode, delayNode;
 
   console.log("Got remote media stream track.")
 
@@ -122,9 +122,17 @@ function gotRemoteTrack(event)
 
   console.log("Creating audio nodes.")
   inputNode  = new MediaStreamAudioSourceNode(audioContext, {mediaStream});
+  latency    = document.getElementById("latency").value / 1000;
+  delayNode  = new DelayNode(audioContext, {
+    delayTime:    1 - latency,
+    maxDelayTime: 1})
+  console.log("Latency is %.0f ms, delaying output by %.0f ms.",
+    1000*latency,
+    1000*(1 - latency));
 
   console.log("Connecting audio nodes.")
-  inputNode.connect(audioContext.destination)
+  inputNode.connect(delayNode);
+  delayNode.connect(audioContext.destination);
 }
 
 function signal(message)
