@@ -125,7 +125,7 @@ function gotRemoteTrack(event)
   latency    = document.getElementById("latency").value / 1000;
   delayNode  = new DelayNode(audioContext, {
     delayTime:    loopLength - latency,
-    maxDelayTime: 1})
+    maxDelayTime: loopLength          })
   console.log("Latency is %.0f ms, delaying output by %.0f ms.",
     1000*latency,
     1000*(loopLength - latency));
