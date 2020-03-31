@@ -1,4 +1,6 @@
-'use strict';
+"use strict";
+
+import Metronome from "./metronome.js";
 
 var signalingChannel, ownId, clientId; // for Websocket 
 var connection; // For RTC
@@ -12,8 +14,10 @@ function initDocument()
   document.getElementById("startServerButton").onclick = startServer;
 }
 
-function startServer()
+async function startServer()
 {
+  var metronome, clickBuffer;
+
   console.log("Creating audio contect.");
   audioContext = new AudioContext({sampleRate});
   console.log("Audio context sample rate: %.0f Hz.", audioContext.sampleRate);
@@ -36,7 +40,9 @@ function startServer()
   // (inputNodes are created when remote tracks are received.)
 
   // Starting metronome at 120 bpm.
-  scheduleClicks(60/120);
+  clickBuffer = await loadAudioBuffer("snd/CYCdh_K1close_ClHat-07.wav");
+  metronome = new Metronome(audioContext, outputNode, 120, clickBuffer);
+  metronome.start();
 
   console.log("Creating connection to signaling server.");
   signalingChannel = new WebSocket(signalingServerUrl)
@@ -154,36 +160,4 @@ async function loadAudioBuffer(url)
   buffer = await audioContext.decodeAudioData(audioData);
   console.log("Loaded audio data from %s.", url);  
   return buffer;
-}
-
-
-// Metronome 
-
-var clickBuffer;
-
-async function loadClick()
-{
-  const url = "snd/CYCdh_K1close_ClHat-07.wav";
-  clickBuffer = await loadAudioBuffer(url);
-}
-
-function playClick(when = 0)
-{
-  var node;
-
-  node = new AudioBufferSourceNode(audioContext, {buffer: clickBuffer});
-  node.connect(outputNode);
-  node.start(when)
-}
-
-async function scheduleClicks(period, from = audioContext.currentTime)
-{
-  var when;
-
-  if (!clickBuffer) await loadClick();
-
-  for (when = from; when < audioContext.currentTime + 2; when += period)
-    playClick(when);
-  
-  setTimeout(scheduleClicks, 1000, period, when);
 }
