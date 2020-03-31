@@ -140,3 +140,65 @@ function signal(message)
   message.from = ownId;
   signalingChannel.send(JSON.stringify(message));
 }
+
+async function loadAudioBuffer(url)
+{
+  var response, audioData, buffer;
+
+  console.log("Loading audio data from %s.", url);
+  response = await fetch(url);
+  audioData = await response.arrayBuffer();
+  buffer = await audioContext.decodeAudioData(audioData);
+  console.log("Loaded audio data from %s.", url);  
+  return buffer;
+}
+
+var clickBuffer;
+
+function playClick(when = 0)
+{
+  var node;
+
+  node = new AudioBufferSourceNode(audioContext, {buffer: clickBuffer});
+  node.connect(audioContext.destination);
+  node.start(when)
+}
+
+function playNextClick(period)
+{
+
+  var nextTime = period*Math.ceil(audioContext.currentTime/period) + 1;
+  console.log("Scheduling click at %.0f ms.", 1000*nextTime)
+  playClick(nextTime);
+}
+
+function scheduleClicks(period, from = audioContext.currentTime)
+{
+  var when;
+
+  for (when = from; when < audioContext.currentTime + 2; when += period)
+    playClick(when);
+  
+  setTimeout(scheduleClicks, 1000, period, when);
+}
+
+async function loadClick()
+{
+  const url = "snd/CYCdh_K1close_ClHat-07.wav";
+  clickBuffer = await loadAudioBuffer(url);
+}
+
+async function startMetronome(tempo)
+{
+  var period;
+
+  period = 60/tempo;
+
+  console.log("Starting metronome at %d bpm, one click per %.0f ms.",
+    tempo, 1000*period);
+  
+    setInterval(playNextClick, 1000*period, period);
+}
+
+//document.onclose = (event) => console.log("document.close event");
+//document.onenmptied = (event) => console.log("document.emptied event");
