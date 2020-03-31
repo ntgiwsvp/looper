@@ -27,10 +27,7 @@ export default class Metronome
 
 
     for (t = when; t < now + 2; t += this.period)
-    {
-      console.log("scheduling at %.3f s", t)
       this.playClick(t);
-    }
 
     setTimeout(() => this.start(t), 1000);
   }
