@@ -35,6 +35,9 @@ function startServer()
   //
   // (inputNodes are created when remote tracks are received.)
 
+  // Starting metronome at 120 bpm.
+  scheduleClicks(60/120);
+
   console.log("Creating connection to signaling server.");
   signalingChannel = new WebSocket(signalingServerUrl)
   signalingChannel.onmessage         = receiveMessage;
@@ -169,13 +172,15 @@ function playClick(when = 0)
   var node;
 
   node = new AudioBufferSourceNode(audioContext, {buffer: clickBuffer});
-  node.connect(audioContext.destination);
+  node.connect(outputNode);
   node.start(when)
 }
 
-function scheduleClicks(period, from = audioContext.currentTime)
+async function scheduleClicks(period, from = audioContext.currentTime)
 {
   var when;
+
+  if (!clickBuffer) await loadClick();
 
   for (when = from; when < audioContext.currentTime + 2; when += period)
     playClick(when);
