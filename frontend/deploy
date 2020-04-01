@@ -1,5 +1,13 @@
 #!/bin/sh
 
+# The following should allow selective deployments according to az
+# documentation, using the --if-modified-since $LASTDEP argument.
+# However, did not not get it to work yet.
+
+# LASTDEPLOCAL=$(stat -c '%y' lastdeployment)
+# LASTDEP=$(date -u -d "$LASTDEPLOCAL" +%Y-%m-%dT%H:%MZ)
+# echo "Uploading files modified since $LASTDEP"
+
 az storage blob upload-batch --account-name looperfrontend \
                               -d '$web'                    \
                               -s .                         \
@@ -13,5 +21,6 @@ az storage blob upload-batch --account-name looperfrontend \
 az storage blob upload-batch --account-name looperfrontend \
                               -d '$web'                    \
                               -s snd                       \
-                             --destination-path snd        \
-                             --pattern '*'
+                             --destination-path snd
+
+# touch lastdeployment
