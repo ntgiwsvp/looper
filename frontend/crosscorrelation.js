@@ -13,6 +13,8 @@ function initDocument()
   document.getElementById("startButton").onclick = start;
 }
 
+const test = true;
+
 async function start()
 {
   var metronome, convolverNode, clickBuffer, reverseBuffer, scriptProcessor;
@@ -21,25 +23,41 @@ async function start()
   audioContext = new AudioContext({sampleRate});
   console.log("Audio context sample rate: %.0f Hz.", audioContext.sampleRate);
 
-  // Input
-  mediaStream =  await navigator.mediaDevices.getUserMedia({audio: {
-    echoCancellation: false,
-    noiseSuppression: false,
-    channelCount:     1}});
-  inputNode = new MediaStreamAudioSourceNode(audioContext, {mediaStream});
-
+  // metronome and input node
   clickBuffer = await loadAudioBuffer("snd/CYCdh_K1close_ClHat-07.wav");
+  if (test)
+  {
+    console.log("Working in simulation mode.")
+    inputNode = new DelayNode(audioContext, {delayTime: 0.200});
+    inputNode.connect(audioContext.destination); // for monitoring
+
+    metronome = new Metronome(audioContext, inputNode,
+      60*sampleRate/16384, clickBuffer);
+  }
+  else
+  {
+    console.log("Working actual mode.")
+    mediaStream =  await navigator.mediaDevices.getUserMedia({audio: {
+      echoCancellation: false,
+      noiseSuppression: false,
+      channelCount:     1}});
+
+    inputNode = new MediaStreamAudioSourceNode(audioContext, {mediaStream});
+
+    metronome = new Metronome(audioContext, audioContext.destination,
+      60*sampleRate/16384, clickBuffer);
+  }
+
+  metronome.start(-1);
+
+  // convolver node
   reverseBuffer = revertBuffer(clickBuffer);
   convolverNode = new ConvolverNode(audioContext, {buffer: reverseBuffer});
+  inputNode.connect(convolverNode);
 
-  metronome = new Metronome(audioContext, audioContext.destination,
-    60*sampleRate/16384, clickBuffer);
-  metronome.start();
-
+  // script processor node
   scriptProcessor = audioContext.createScriptProcessor(16384, 1, 0);
   scriptProcessor.onaudioprocess = processAudio;
-
-  inputNode.connect(convolverNode);
   convolverNode.connect(scriptProcessor);
 
   console.log("running...")
@@ -63,9 +81,12 @@ function processAudio(event)
     }
   }
 
-  latency = argmax/sampleRate;
+  latency = frac(argmax/16384 - event.playbackTime*sampleRate/16384)
+    * 16384/sampleRate;
 
   document.getElementById("outputSpan").innerHTML = Math.round(1000*latency) + " ms"
+
+  console.log("argmax is %.3f at %.3f.", argmax/16384, event.playbackTime*sampleRate/16384);
 }
 
 function revertBuffer(buffer)
@@ -97,4 +118,9 @@ async function loadAudioBuffer(url)
   buffer = await audioContext.decodeAudioData(audioData);
   console.log("Loaded audio data from %s.", url);  
   return buffer;
+}
+
+function frac(x)
+{
+  return x - Math.floor(x);
 }
