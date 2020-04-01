@@ -13,7 +13,7 @@ function initDocument()
   document.getElementById("startButton").onclick = start;
 }
 
-const test = false;
+const test = true;
 var clickBufferDuration;
 
 async function start()
@@ -35,21 +35,20 @@ async function start()
     inputNode = new DelayNode(audioContext, {delayTime: 0.000});
     inputNode.connect(audioContext.destination); // for monitoring
 
-    metronome = new Metronome(audioContext, inputNode,
-      60*sampleRate/16384, clickBuffer);
+    metronome = new Metronome(audioContext, inputNode, 60, clickBuffer);
   }
   else
   {
     console.log("Working actual mode.")
+
     mediaStream =  await navigator.mediaDevices.getUserMedia({audio: {
       echoCancellation: false,
       noiseSuppression: false,
       channelCount:     1}});
-
     inputNode = new MediaStreamAudioSourceNode(audioContext, {mediaStream});
 
-    metronome = new Metronome(audioContext, audioContext.destination,
-      60*sampleRate/16384, clickBuffer);
+    metronome = new Metronome(audioContext, audioContext.destination, 60,
+      clickBuffer);
   }
 
   metronome.start(-1);
@@ -64,49 +63,90 @@ async function start()
   scriptProcessor.onaudioprocess = processAudio;
   convolverNode.connect(scriptProcessor);
   scriptProcessor.connect(audioContext.destination);
-  // Workaround: onaudioprocess would not be fired in Chrome.  See
+  // Need to connect script processor to destination, otherwise
+  // onaudioprocess would not be fired in Chrome.  See
   // https://stackoverflow.com/q/27324608
-  // Connected a 0 buffer to the destination node.  However this
-  // probably increases latency, at least with current strategy to have a huge
-  // buffer.  Maybe solution is to reduce buffer size and have another
-  // round of maxing via static/global variables or similar.
+
   console.log("running...")
 }
 
+var max, argmax;
+
 function processAudio(event)
 {
-  var array, i, argmax, max, latency;
-  var relativeArgmax, relativePlaybackTime, relativeClickBufferDuration, phase;
+  var array, i, latency, bufferSize, bufferDuration;
+  var startSecond, endSecond, boundarySample;
 
-  array = event.inputBuffer.getChannelData(0);
+  array          = event.inputBuffer.getChannelData(0);
+  bufferSize     = event.inputBuffer.length;
+  bufferDuration = event.inputBuffer.duration;
+  startSecond    = Math.floor(event.playbackTime);
+  endSecond      = Math.floor(event.playbackTime + bufferDuration);
 
-  argmax = 0;
-  max = array[0];
+  if (!max) {max = argmax = -1};
 
-  for (i = 1; i < 16384; i++)
+  //console.log("buffer: [0: %f .. %d: %f", array[0], bufferSize - 1, array[bufferSize - 1]);
+
+  // BUFFER CONTAINED WITHIN ONE SECOND
+  if (startSecond == endSecond)
   {
-    if (array[i] > max)
+    for (i = 0; i < bufferSize; i++) if (array[i] > max)
     {
-      argmax = i;
-      max = array[i];
+      argmax = frac(event.playbackTime + i/sampleRate);
+      max    = array[i];
     }
+
+    console.log("%.3f to %.3f: max %.2f at %.3f.",
+      event.playbackTime,
+      event.playbackTime + bufferSize/sampleRate,
+      max,
+      argmax);
+
+    return;
+  }  
+  
+  // BEGINNING OF BUFFER UNTIL SECOND BOUNDARY
+  boundarySample = Math.round((endSecond - event.playbackTime)*sampleRate);
+  //console.log("boundary sample: [.. %d: %f ..]", boundarySample, array[boundarySample]);
+
+  for (i = 0; i < boundarySample; i++) if (array[i] > max)
+  {
+    argmax = frac(event.playbackTime + i/sampleRate);
+    max = array[i];
   }
 
-  relativeArgmax = frac(argmax/16384);
-  relativePlaybackTime = frac(event.playbackTime*sampleRate/16384);
-  relativeClickBufferDuration = frac(clickBufferDuration*sampleRate/16384);
-  phase = frac(relativeArgmax + relativePlaybackTime - relativeClickBufferDuration);
+  console.log("%.3f to %.3f: max %.2f at %.3f.",
+    event.playbackTime,
+    event.playbackTime + boundarySample/sampleRate,
+    max,
+    argmax);
 
-  if (phase > 0.9) phase -= 1; // underflow should not happen, but I have seen it! :-)
+  console.log("----------------------");
 
-  console.log("arg max = %.3f,  playback time = %.3f, click buffer duration = %.3f, phase =  %.3f.",
-    relativeArgmax, relativePlaybackTime, relativeClickBufferDuration, phase);
-
-  latency = phase*16384/sampleRate;
+  //console.log("Click buffer duration is %.0f ms.", 1000*clickBufferDuration);
+  latency = frac(argmax - clickBufferDuration - bufferDuration);
+  if (latency > 0.95) latency -= 1; // underflow should not happen, but I have seen it! :-)
+  //console.log("Latency is %.0f ms.", 1000*latency);
 
   document.getElementById("outputSpan").innerHTML =
     Math.round(1000*latency) + " ms"
 
+  // END OF BUFFER FROM SECOND BOUNDARY
+
+  max = argmax = -1;
+
+  //console.log("bounary: %f | %f", array[boundarySample - 1], array[boundarySample]);
+
+  for (i = boundarySample; i < bufferSize; i++) if (array[i] > max)
+  {
+    argmax = frac(event.playbackTime + i/sampleRate);
+    max = array[i];
+  }
+  console.log("%.3f to %.3f: max %.2f at %.3f.",
+    event.playbackTime + boundarySample/sampleRate,
+    event.playbackTime + bufferSize/sampleRate,
+    max,
+    argmax);
 }
 
 function revertBuffer(buffer)
