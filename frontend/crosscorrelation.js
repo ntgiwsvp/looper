@@ -111,21 +111,12 @@ function processAudio(event)
     }
 
     // Perform calculation
-    latency = frac(argmax - clickBufferDuration - bufferDuration - playbackTimeAdjustment/sampleRate);
-    if (latency > 0.95) latency -= 1; // underflow should not happen, but I have seen it! :-)
+    latency = frac(argmax - clickBufferDuration - bufferDuration
+      - (playbackTimeAdjustment - 1)/sampleRate);
+    if (latency > 0.95) latency -= 1; // underflow should not happen, but just in case :-)
 
     console.log("Latency: %.2f ms = %.0f samples",
       1000*latency, Math.round(latency*sampleRate));
-
-    const startSample = Math.round(event.playbackTime*sampleRate);
-    console.log("Playback time is %d * 16384 + %d * 128 + %d samples",
-      Math.floor(startSample/16384),
-      Math.floor((startSample % 16384)/128),
-      startSample % 128);
-
-    console.log("Playback time adjustment is %d * 128 + %d samples",
-      Math.floor(playbackTimeAdjustment/128),
-      playbackTimeAdjustment % 128);
 
     document.getElementById("outputSpan").innerHTML =
       Math.round(1000*latency) + " ms"
