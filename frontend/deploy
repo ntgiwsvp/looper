@@ -9,4 +9,9 @@ az storage blob upload-batch --account-name looperfrontend \
                               -d '$web'                    \
                               -s .                         \
                              --pattern '*.html'
-                             
+
+az storage blob upload-batch --account-name looperfrontend \
+                              -d '$web'                    \
+                              -s snd                       \
+                             --destination-path snd        \
+                             --pattern '*'
