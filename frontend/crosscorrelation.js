@@ -63,7 +63,12 @@ async function start()
   scriptProcessor = audioContext.createScriptProcessor(16384, 1, 0);
   scriptProcessor.onaudioprocess = processAudio;
   convolverNode.connect(scriptProcessor);
-
+  // BUG: onaudioprocess will not be fired in Chrome.  See
+  // https://stackoverflow.com/q/27324608
+  // Fix would be to connect a 0 buffer to the destination node.  However this 
+  // Would increase latency, at least with current strategy to have a huge
+  // buffer.  Maybe solution is to reduce buffer size and have another
+  // round of maxing via static/global variables or similar.
   console.log("running...")
 }
 
