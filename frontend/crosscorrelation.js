@@ -113,7 +113,13 @@ function processAudio(event)
     Math.floor(Math.round(latency*sampleRate)/128),
     Math.round(latency*sampleRate) % 128);
 
-  document.getElementById("outputSpan").innerHTML =
+  const startSample = Math.round(event.playbackTime*sampleRate);
+  console.log("Playback time is %d * 16384 + %d * 128 + %d samples",
+    Math.floor(startSample/16384),
+    Math.floor((startSample % 16384)/128),
+    startSample % 128);
+
+    document.getElementById("outputSpan").innerHTML =
     Math.round(1000*latency) + " ms"
 
   // END OF BUFFER FROM SECOND BOUNDARY
