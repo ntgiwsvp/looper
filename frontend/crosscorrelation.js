@@ -32,7 +32,7 @@ async function start()
   if (test)
   {
     console.log("Working in simulation mode.")
-    inputNode = new DelayNode(audioContext, {delayTime: 0.000});
+    inputNode = new DelayNode(audioContext, {delayTime: 0/sampleRate});
     inputNode.connect(audioContext.destination); // for monitoring
 
     metronome = new Metronome(audioContext, inputNode, 60, clickBuffer);
@@ -85,8 +85,6 @@ function processAudio(event)
 
   if (!max) {max = argmax = -1};
 
-  //console.log("buffer: [0: %f .. %d: %f", array[0], bufferSize - 1, array[bufferSize - 1]);
-
   // BUFFER CONTAINED WITHIN ONE SECOND
   if (startSecond == endSecond)
   {
@@ -95,19 +93,11 @@ function processAudio(event)
       argmax = frac(event.playbackTime + i/sampleRate);
       max    = array[i];
     }
-
-    console.log("%.3f to %.3f: max %.2f at %.3f.",
-      event.playbackTime,
-      event.playbackTime + bufferSize/sampleRate,
-      max,
-      argmax);
-
     return;
   }  
   
   // BEGINNING OF BUFFER UNTIL SECOND BOUNDARY
   boundarySample = Math.round((endSecond - event.playbackTime)*sampleRate);
-  //console.log("boundary sample: [.. %d: %f ..]", boundarySample, array[boundarySample]);
 
   for (i = 0; i < boundarySample; i++) if (array[i] > max)
   {
@@ -115,38 +105,24 @@ function processAudio(event)
     max = array[i];
   }
 
-  console.log("%.3f to %.3f: max %.2f at %.3f.",
-    event.playbackTime,
-    event.playbackTime + boundarySample/sampleRate,
-    max,
-    argmax);
-
-  console.log("----------------------");
-
-  //console.log("Click buffer duration is %.0f ms.", 1000*clickBufferDuration);
   latency = frac(argmax - clickBufferDuration - bufferDuration);
   if (latency > 0.95) latency -= 1; // underflow should not happen, but I have seen it! :-)
-  //console.log("Latency is %.0f ms.", 1000*latency);
+
+  console.log("Latency: %.1f ms = %.0f render quanta + %.0f samples",
+    1000*latency,
+    Math.floor(Math.round(latency*sampleRate)/128),
+    Math.round(latency*sampleRate) % 128);
 
   document.getElementById("outputSpan").innerHTML =
     Math.round(1000*latency) + " ms"
 
   // END OF BUFFER FROM SECOND BOUNDARY
-
   max = argmax = -1;
-
-  //console.log("bounary: %f | %f", array[boundarySample - 1], array[boundarySample]);
-
   for (i = boundarySample; i < bufferSize; i++) if (array[i] > max)
   {
     argmax = frac(event.playbackTime + i/sampleRate);
     max = array[i];
   }
-  console.log("%.3f to %.3f: max %.2f at %.3f.",
-    event.playbackTime + boundarySample/sampleRate,
-    event.playbackTime + bufferSize/sampleRate,
-    max,
-    argmax);
 }
 
 function revertBuffer(buffer)
