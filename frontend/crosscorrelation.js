@@ -13,7 +13,7 @@ function initDocument()
   document.getElementById("startButton").onclick = start;
 }
 
-const test = true;
+const test = false;
 var clickBufferDuration;
 
 async function start()
@@ -32,7 +32,7 @@ async function start()
   if (test)
   {
     console.log("Working in simulation mode.")
-    inputNode = new DelayNode(audioContext, {delayTime: 0/sampleRate});
+    inputNode = new DelayNode(audioContext, {delayTime: 12345/sampleRate});
     inputNode.connect(audioContext.destination); // for monitoring
 
     metronome = new Metronome(audioContext, inputNode, 60, clickBuffer);
@@ -59,10 +59,11 @@ async function start()
   inputNode.connect(convolverNode);
 
   // script processor node
-  scriptProcessor = audioContext.createScriptProcessor(16384, 1, 1);
+  scriptProcessor = audioContext.createScriptProcessor(16384, 1, 0);
+  //scriptProcessor = audioContext.createScriptProcessor(16384, 1, 1);
   scriptProcessor.onaudioprocess = processAudio;
   convolverNode.connect(scriptProcessor);
-  scriptProcessor.connect(audioContext.destination);
+  //scriptProcessor.connect(audioContext.destination);
   // Need to connect script processor to destination, otherwise
   // onaudioprocess would not be fired in Chrome.  See
   // https://stackoverflow.com/q/27324608
