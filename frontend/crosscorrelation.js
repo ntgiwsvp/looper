@@ -70,12 +70,13 @@ async function start()
   console.log("running...")
 }
 
-var max, argmax;
+var max, argmax, initialPlaybackTime;
 
 function processAudio(event)
 {
   var array, i, latency, bufferSize, bufferDuration;
-  var startSecond, endSecond, boundarySample;
+  var startSecond, endSecond, boundarySample, currentPlaybackTime;
+  var playbackTimeAdjustment;
 
   array          = event.inputBuffer.getChannelData(0);
   bufferSize     = event.inputBuffer.length;
@@ -85,6 +86,11 @@ function processAudio(event)
 
   if (!max) {max = argmax = -1};
 
+  // Dirty trick
+  currentPlaybackTime = Math.round(event.playbackTime*sampleRate) % 16384;
+  if (!initialPlaybackTime) initialPlaybackTime = currentPlaybackTime;
+  playbackTimeAdjustment = (currentPlaybackTime - initialPlaybackTime) % 16384;
+
   if (startSecond == endSecond) // Buffer contained within one second
   {
     for (i = 0; i < bufferSize; i++) if (array[i] > max)
@@ -92,7 +98,6 @@ function processAudio(event)
       argmax = frac(event.playbackTime + i/sampleRate);
       max    = array[i];
     }
-    return;
   }
   else // Buffer spans two seconds
   {
@@ -106,13 +111,11 @@ function processAudio(event)
     }
 
     // Perform calculation
-    latency = frac(argmax - clickBufferDuration - bufferDuration);
+    latency = frac(argmax - clickBufferDuration - bufferDuration - playbackTimeAdjustment/sampleRate);
     if (latency > 0.95) latency -= 1; // underflow should not happen, but I have seen it! :-)
 
-    console.log("Latency: %.1f ms = %.0f render quanta + %.0f samples",
-      1000*latency,
-      Math.floor(Math.round(latency*sampleRate)/128),
-      Math.round(latency*sampleRate) % 128);
+    console.log("Latency: %.2f ms = %.0f samples",
+      1000*latency, Math.round(latency*sampleRate));
 
     const startSample = Math.round(event.playbackTime*sampleRate);
     console.log("Playback time is %d * 16384 + %d * 128 + %d samples",
@@ -120,7 +123,11 @@ function processAudio(event)
       Math.floor((startSample % 16384)/128),
       startSample % 128);
 
-      document.getElementById("outputSpan").innerHTML =
+    console.log("Playback time adjustment is %d * 128 + %d samples",
+      Math.floor(playbackTimeAdjustment/128),
+      playbackTimeAdjustment % 128);
+
+    document.getElementById("outputSpan").innerHTML =
       Math.round(1000*latency) + " ms"
 
     // Process part of buffer in end second
@@ -130,8 +137,8 @@ function processAudio(event)
       argmax = frac(event.playbackTime + i/sampleRate);
       max = array[i];
     }
-  }
 
+  }
 }
 
 function revertBuffer(buffer)
