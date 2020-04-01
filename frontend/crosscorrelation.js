@@ -85,8 +85,7 @@ function processAudio(event)
 
   if (!max) {max = argmax = -1};
 
-  // BUFFER CONTAINED WITHIN ONE SECOND
-  if (startSecond == endSecond)
+  if (startSecond == endSecond) // Buffer contained within one second
   {
     for (i = 0; i < bufferSize; i++) if (array[i] > max)
     {
@@ -94,41 +93,45 @@ function processAudio(event)
       max    = array[i];
     }
     return;
-  }  
-  
-  // BEGINNING OF BUFFER UNTIL SECOND BOUNDARY
-  boundarySample = Math.round((endSecond - event.playbackTime)*sampleRate);
-
-  for (i = 0; i < boundarySample; i++) if (array[i] > max)
+  }
+  else // Buffer spans two seconds
   {
-    argmax = frac(event.playbackTime + i/sampleRate);
-    max = array[i];
+    // Process part of buffer in start second
+    boundarySample = Math.round((endSecond - event.playbackTime)*sampleRate);
+
+    for (i = 0; i < boundarySample; i++) if (array[i] > max)
+    {
+      argmax = frac(event.playbackTime + i/sampleRate);
+      max = array[i];
+    }
+
+    // Perform calculation
+    latency = frac(argmax - clickBufferDuration - bufferDuration);
+    if (latency > 0.95) latency -= 1; // underflow should not happen, but I have seen it! :-)
+
+    console.log("Latency: %.1f ms = %.0f render quanta + %.0f samples",
+      1000*latency,
+      Math.floor(Math.round(latency*sampleRate)/128),
+      Math.round(latency*sampleRate) % 128);
+
+    const startSample = Math.round(event.playbackTime*sampleRate);
+    console.log("Playback time is %d * 16384 + %d * 128 + %d samples",
+      Math.floor(startSample/16384),
+      Math.floor((startSample % 16384)/128),
+      startSample % 128);
+
+      document.getElementById("outputSpan").innerHTML =
+      Math.round(1000*latency) + " ms"
+
+    // Process part of buffer in end second
+    max = argmax = -1;
+    for (i = boundarySample; i < bufferSize; i++) if (array[i] > max)
+    {
+      argmax = frac(event.playbackTime + i/sampleRate);
+      max = array[i];
+    }
   }
 
-  latency = frac(argmax - clickBufferDuration - bufferDuration);
-  if (latency > 0.95) latency -= 1; // underflow should not happen, but I have seen it! :-)
-
-  console.log("Latency: %.1f ms = %.0f render quanta + %.0f samples",
-    1000*latency,
-    Math.floor(Math.round(latency*sampleRate)/128),
-    Math.round(latency*sampleRate) % 128);
-
-  const startSample = Math.round(event.playbackTime*sampleRate);
-  console.log("Playback time is %d * 16384 + %d * 128 + %d samples",
-    Math.floor(startSample/16384),
-    Math.floor((startSample % 16384)/128),
-    startSample % 128);
-
-    document.getElementById("outputSpan").innerHTML =
-    Math.round(1000*latency) + " ms"
-
-  // END OF BUFFER FROM SECOND BOUNDARY
-  max = argmax = -1;
-  for (i = boundarySample; i < bufferSize; i++) if (array[i] > max)
-  {
-    argmax = frac(event.playbackTime + i/sampleRate);
-    max = array[i];
-  }
 }
 
 function revertBuffer(buffer)
