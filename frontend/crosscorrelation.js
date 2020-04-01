@@ -14,6 +14,7 @@ function initDocument()
 }
 
 const test = true;
+var clickBufferDuration;
 
 async function start()
 {
@@ -25,10 +26,13 @@ async function start()
 
   // metronome and input node
   clickBuffer = await loadAudioBuffer("snd/CYCdh_K1close_ClHat-07.wav");
+  clickBufferDuration = clickBuffer.duration;
+  console.log("click buffer duration: %.1f ms.", 1000*clickBufferDuration);
+
   if (test)
   {
     console.log("Working in simulation mode.")
-    inputNode = new DelayNode(audioContext, {delayTime: 0.200});
+    inputNode = new DelayNode(audioContext, {delayTime: 0.000});
     inputNode.connect(audioContext.destination); // for monitoring
 
     metronome = new Metronome(audioContext, inputNode,
@@ -66,6 +70,7 @@ async function start()
 function processAudio(event)
 {
   var array, i, argmax, max, latency;
+  var relativeArgmax, relativePlaybackTime, relativeClickBufferDuration, phase;
 
   array = event.inputBuffer.getChannelData(0);
 
@@ -81,12 +86,20 @@ function processAudio(event)
     }
   }
 
-  latency = frac(argmax/16384 - event.playbackTime*sampleRate/16384)
-    * 16384/sampleRate;
+  relativeArgmax = frac(argmax/16384);
+  relativePlaybackTime = frac(event.playbackTime*sampleRate/16384);
+  relativeClickBufferDuration = frac(clickBufferDuration*sampleRate/16384);
+  phase = frac(relativeArgmax + relativePlaybackTime - relativeClickBufferDuration);
 
-  document.getElementById("outputSpan").innerHTML = Math.round(1000*latency) + " ms"
+  console.log("arg max = %.3f,  playback time = %.3f, click buffer duration = %.3f, phase =  %.3f.",
+    relativeArgmax, relativePlaybackTime, relativeClickBufferDuration, phase);
 
-  console.log("argmax is %.3f at %.3f.", argmax/16384, event.playbackTime*sampleRate/16384);
+
+  latency = phase*16384/sampleRate;
+
+  document.getElementById("outputSpan").innerHTML =
+    Math.round(1000*latency) + " ms"
+
 }
 
 function revertBuffer(buffer)
