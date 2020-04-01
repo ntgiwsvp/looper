@@ -13,7 +13,7 @@ function initDocument()
   document.getElementById("startButton").onclick = start;
 }
 
-const test = true;
+const test = false;
 var clickBufferDuration;
 
 async function start()
@@ -60,13 +60,14 @@ async function start()
   inputNode.connect(convolverNode);
 
   // script processor node
-  scriptProcessor = audioContext.createScriptProcessor(16384, 1, 0);
+  scriptProcessor = audioContext.createScriptProcessor(16384, 1, 1);
   scriptProcessor.onaudioprocess = processAudio;
   convolverNode.connect(scriptProcessor);
-  // BUG: onaudioprocess will not be fired in Chrome.  See
+  scriptProcessor.connect(audioContext.destination);
+  // Workaround: onaudioprocess would not be fired in Chrome.  See
   // https://stackoverflow.com/q/27324608
-  // Fix would be to connect a 0 buffer to the destination node.  However this 
-  // Would increase latency, at least with current strategy to have a huge
+  // Connected a 0 buffer to the destination node.  However this
+  // probably increases latency, at least with current strategy to have a huge
   // buffer.  Maybe solution is to reduce buffer size and have another
   // round of maxing via static/global variables or similar.
   console.log("running...")
