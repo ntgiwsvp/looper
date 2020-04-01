@@ -91,9 +91,10 @@ function processAudio(event)
   relativeClickBufferDuration = frac(clickBufferDuration*sampleRate/16384);
   phase = frac(relativeArgmax + relativePlaybackTime - relativeClickBufferDuration);
 
+  if (phase > 0.9) phase -= 1; // underflow should not happen, but I have seen it! :-)
+
   console.log("arg max = %.3f,  playback time = %.3f, click buffer duration = %.3f, phase =  %.3f.",
     relativeArgmax, relativePlaybackTime, relativeClickBufferDuration, phase);
-
 
   latency = phase*16384/sampleRate;
 
