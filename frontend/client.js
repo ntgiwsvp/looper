@@ -15,7 +15,7 @@ function initDocument()
 
 async function startStream()
 {
-  var stream, tracks, description;
+  var userInputStream, description, userInputNode, serverOutputNode;
 
   sessionId = document.getElementById("sessionId").value;
   console.log("Joining session %s.", sessionId);
@@ -38,14 +38,20 @@ async function startStream()
   connection.onconnectionstatechange = reportConnectionState;
 
   console.log("Getting user media.");
-  stream = await navigator.mediaDevices.getUserMedia({audio: {
+  userInputStream = await navigator.mediaDevices.getUserMedia({audio: {
     echoCancellation: false,
     noiseSuppression: false,
     channelCount:     1}});
 
+  console.log("Creating user input node.");
+  userInputNode = new MediaStreamAudioSourceNode(audioContext, {mediaStream: userInputStream});
+
+  console.log("Creating server output node.")
+  serverOutputNode = new MediaStreamAudioDestinationNode(audioContext);
+  userInputNode.connect(serverOutputNode);
+
   console.log("Adding track to connection.");
-  tracks = stream.getAudioTracks();
-  connection.addTrack(tracks[0]);
+  connection.addTrack(serverOutputNode.stream.getAudioTracks()[0]);
 
   console.log("Creating offer.")
   description = await connection.createOffer({voiceActivityDetection: false});
