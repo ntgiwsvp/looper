@@ -162,6 +162,7 @@ function gotRemoteTrack(event)
   channelSplitterNode = new ChannelSplitterNode(audioContext, {numberOfOutputs: 2});
   clientInputNode.connect(channelSplitterNode);
   channelSplitterNode.connect(gainNode, 0);
+  channelSplitterNode.connect(channelMergerNode, 1, 1);
 }
 
 function signal(message)
