@@ -7,6 +7,7 @@ var connection; // for RTC
 var audioContext; // for Web Audio API
 var clickBuffer, clickBufferDuration; // click for latency detection
 var delayNode, userLatency; // needs to be global to access from processAudio
+var sampleRate;
 
 document.addEventListener("DOMContentLoaded", initDocument);
 
@@ -40,11 +41,21 @@ async function startStream()
     channelMergerNode, metronome;
 
   sessionId = document.getElementById("sessionId").value;
+  document.getElementById("sessionId").disabled = true;
   console.log("Joining session %s.", sessionId);
 
+  sampleRate = document.getElementById("sampleRate").value * 1;
+  document.getElementById("sampleRate").disabled = true;
+  console.log("Sample rate: %.0f Hz.", sampleRate);
+
+  userLatency = document.getElementById("latency").value / 1000;
+  document.getElementById("latency").disabled = true
+  console.log("User latency is %.2f ms.", 1000*userLatency);
+
+  document.getElementById("startButton").disabled = true;
+  
   console.log("Creating audio context.");
   audioContext = new AudioContext({sampleRate});
-  console.log("Audio context sample rate: %.0f Hz.", audioContext.sampleRate);
 
   console.log("Creating connection to signaling server.");
   signalingChannel = new WebSocket(signalingServerUrl);
@@ -69,7 +80,6 @@ async function startStream()
   userInputNode = new MediaStreamAudioSourceNode(audioContext, {mediaStream: userInputStream});
 
   console.log("Creating delay node");
-  userLatency = document.getElementById("latency").value / 1000;
   delayNode = new DelayNode(audioContext, {maxDelayTime: loopLength})
   userInputNode.connect(delayNode);
     

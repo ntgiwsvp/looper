@@ -2,7 +2,7 @@
 
 import Metronome from "./metronome.js";
 
-var audioContext; // for Web Audio API
+var audioContext, sampleRate; // for Web Audio API
 
 document.addEventListener("DOMContentLoaded", initDocument);
 
@@ -21,8 +21,14 @@ async function start()
   var metronome, convolverNode, clickBuffer, reverseBuffer, scriptProcessor;
   var inputNode, mediaStream;
 
+  sampleRate = document.getElementById("sampleRate").value * 1;
+  document.getElementById("sampleRate").disabled = true;
+  console.log("Sample rate: %.0f Hz.", sampleRate);
+
+  document.getElementById("startButton").disabled = true;
+
+  console.log("Creating audio context.");
   audioContext = new AudioContext({sampleRate});
-  console.log("Audio context sample rate: %.0f Hz.", audioContext.sampleRate);
 
   // metronome and input node
   clickBuffer = await loadAudioBuffer("snd/CYCdh_K1close_ClHat-07.wav");
