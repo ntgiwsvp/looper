@@ -4,7 +4,7 @@ import Metronome from "./metronome.js";
 
 var signalingChannel, ownId, clientId; // for Websocket 
 var connection; // For RTC
-var audioContext, clientOutputNode, gainNode, delayNode; // for Web Audio API
+var audioContext, clientOutputNode, gainNode, delayNode, channelMergerNode; // for Web Audio API
 
 document.addEventListener("DOMContentLoaded", initDocument);
 
@@ -22,26 +22,41 @@ async function startServer()
   audioContext = new AudioContext({sampleRate});
   console.log("Audio context sample rate: %.0f Hz.", audioContext.sampleRate);
 
-  console.log("Creating gain node.")
+  console.log("Creating gain node.");
   gainNode = new GainNode(audioContext, {gain: 0.9});
 
-  console.log("Creating delay node.")
+  console.log("Creating delay node.");
   delayNode = new DelayNode(audioContext, {
     delayTime:    loopLength,
     maxDelayTime: loopLength});
   gainNode.connect(delayNode);
   delayNode.connect(gainNode);
 
-  console.log("Creating client output node.")
+  console.log("Creating channel merger node.");
+  channelMergerNode = new ChannelMergerNode(audioContext, {numberOfInputs: 2});
+  gainNode.connect(channelMergerNode, 0, 0);
+
+  console.log("Creating client output node.");
   clientOutputNode = new MediaStreamAudioDestinationNode(audioContext);
-  gainNode .connect(clientOutputNode);
-  
-  //                         delayNode
-  //                          |    A
-  //                          V    |
-  //     clientInputNodes -> gainNode -> clientOutputNode
-  //
-  // (inputNodes are created when remote tracks are received.)
+  channelMergerNode.connect(clientOutputNode);
+
+/*
+    clientInputNode(s)*                clientOutputNode(s)*
+           |                                  A
+           V                                  |
+  channelSplitterNode(s)* -----1-----> channelMergerNode(s)*
+           |                                  |
+           +-----0------> gainNode -----0-----+
+                           |    A
+                           V    |
+                          delayNode
+
+                                                  *created on demand
+*/
+
+
+
+
 
   // Starting metronome at 120 bpm.
   clickBuffer = await loadAudioBuffer("snd/CYCdh_K1close_ClHat-07.wav");
