@@ -1,5 +1,7 @@
 'use strict';
 
+import Metronome from "./metronome.js";
+
 var signalingChannel, ownId, sessionId; // for Websocket
 var connection; // for RTC
 var audioContext; // for Web Audio API
@@ -16,7 +18,7 @@ function initDocument()
 async function startStream()
 {
   var userInputStream, description, userInputNode, serverOutputNode,
-    channelMergerNode;
+    channelMergerNode, metronome, clickBuffer;
 
   sessionId = document.getElementById("sessionId").value;
   console.log("Joining session %s.", sessionId);
@@ -51,6 +53,10 @@ async function startStream()
   channelMergerNode = new ChannelMergerNode(audioContext, {numberOfInputs: 2});
   userInputNode.connect(channelMergerNode, 0, 0);
 
+  console.log("Creating metronome.")
+  clickBuffer = await loadAudioBuffer("snd/CYCdh_K1close_ClHat-07.wav");
+  metronome = new Metronome(audioContext, channelMergerNode, 60, clickBuffer, 1);
+  
   console.log("Creating server output node.")
   serverOutputNode = new MediaStreamAudioDestinationNode(audioContext);
   channelMergerNode.connect(serverOutputNode);
@@ -155,4 +161,16 @@ function signal(message)
   message.to = sessionId;
   message.from = ownId;
   signalingChannel.send(JSON.stringify(message));
+}
+
+async function loadAudioBuffer(url)
+{
+  var response, audioData, buffer;
+
+  console.log("Loading audio data from %s.", url);
+  response = await fetch(url);
+  audioData = await response.arrayBuffer();
+  buffer = await audioContext.decodeAudioData(audioData);
+  console.log("Loaded audio data from %s.", url);  
+  return buffer;
 }
