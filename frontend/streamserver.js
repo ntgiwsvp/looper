@@ -4,7 +4,7 @@ import Metronome from "./metronome.js";
 
 var signalingChannel, ownId, clientId; // for Websocket 
 var connection; // For RTC
-var audioContext, outputNode, gainNode, delayNode; // for Web Audio API
+var audioContext, clientOutputNode, gainNode, delayNode; // for Web Audio API
 
 document.addEventListener("DOMContentLoaded", initDocument);
 
@@ -22,26 +22,30 @@ async function startServer()
   audioContext = new AudioContext({sampleRate});
   console.log("Audio context sample rate: %.0f Hz.", audioContext.sampleRate);
 
-  console.log("Creating audio nodes.")
-  outputNode = new MediaStreamAudioDestinationNode(audioContext);
-  gainNode   = new GainNode(audioContext, {gain: 0.9});
-  delayNode  = new DelayNode(audioContext, {delayTime:    loopLength,
-                                            maxDelayTime: loopLength});
+  console.log("Creating gain node.")
+  gainNode = new GainNode(audioContext, {gain: 0.9});
 
-  console.log("Connecting audio nodes.")
+  console.log("Creating delay node.")
+  delayNode = new DelayNode(audioContext, {
+    delayTime:    loopLength,
+    maxDelayTime: loopLength});
+  gainNode.connect(delayNode);
   delayNode.connect(gainNode);
-  gainNode .connect(delayNode);
-  gainNode .connect(outputNode);
-  //                   delayNode
-  //                    |    A
-  //                    V    |
-  //     inputNodes -> gainNode -> outputNode
+
+  console.log("Creating client output node.")
+  clientOutputNode = new MediaStreamAudioDestinationNode(audioContext);
+  gainNode .connect(clientOutputNode);
+  
+  //                         delayNode
+  //                          |    A
+  //                          V    |
+  //     clientInputNodes -> gainNode -> clientOutputNode
   //
   // (inputNodes are created when remote tracks are received.)
 
   // Starting metronome at 120 bpm.
   clickBuffer = await loadAudioBuffer("snd/CYCdh_K1close_ClHat-07.wav");
-  metronome = new Metronome(audioContext, outputNode, 120, clickBuffer);
+  metronome = new Metronome(audioContext, clientOutputNode, 120, clickBuffer);
   metronome.start();
 
   console.log("Creating connection to signaling server.");
@@ -90,7 +94,7 @@ async function receiveOfferMessage(data)
   connection.onconnectionstatechange = reportConnectionState;
   
   console.log("Sending output to client.");
-  connection.addTrack(outputNode.stream.getAudioTracks()[0]);
+  connection.addTrack(clientOutputNode.stream.getAudioTracks()[0]);
 
   console.log("Setting remote description.");
   await connection.setRemoteDescription(data.offer);
