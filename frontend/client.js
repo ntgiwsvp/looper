@@ -18,7 +18,7 @@ function initDocument()
 async function startStream()
 {
   var userInputStream, description, userInputNode, serverOutputNode,
-    channelMergerNode, metronome, clickBuffer;
+    channelMergerNode, metronome, clickBuffer, delayNode;
 
   sessionId = document.getElementById("sessionId").value;
   console.log("Joining session %s.", sessionId);
@@ -49,9 +49,19 @@ async function startStream()
   console.log("Creating user input node.");
   userInputNode = new MediaStreamAudioSourceNode(audioContext, {mediaStream: userInputStream});
 
+  console.log("Creating delay node");
+  latency = document.getElementById("latency").value / 1000;
+  console.log("Latency is %.0f ms, delaying output by %.0f ms.",
+    1000*latency,
+    1000*(loopLength - latency));
+  delayNode = new DelayNode(audioContext, {
+    delayTime:    loopLength - latency,
+    maxDelayTime: loopLength          })
+  userInputNode.connect(delayNode);
+    
   console.log("Creating channel merger node.");
   channelMergerNode = new ChannelMergerNode(audioContext, {numberOfInputs: 2});
-  userInputNode.connect(channelMergerNode, 0, 0);
+  delayNode.connect(channelMergerNode, 0, 0);
 
   console.log("Creating metronome.")
   clickBuffer = await loadAudioBuffer("snd/CYCdh_K1close_ClHat-07.wav");
@@ -132,7 +142,7 @@ function sendIceCandidate(event)
 
 function gotRemoteTrack(event)
 {
-  var mediaStream, serverInputNode, delayNode, channelSplitterNode;
+  var mediaStream, serverInputNode, channelSplitterNode;
 
   console.log("Got remote media stream track.")
 
@@ -146,16 +156,7 @@ function gotRemoteTrack(event)
   channelSplitterNode = new ChannelSplitterNode(audioContext, {numberOfOutputs: 2});
   serverInputNode.connect(channelSplitterNode);
   
-  console.log("Creating delay node");
-  latency = document.getElementById("latency").value / 1000;
-  delayNode = new DelayNode(audioContext, {
-    delayTime:    loopLength - latency,
-    maxDelayTime: loopLength          })
-  console.log("Latency is %.0f ms, delaying output by %.0f ms.",
-    1000*latency,
-    1000*(loopLength - latency));
-  channelSplitterNode.connect(delayNode, 0);
-  delayNode.connect(audioContext.destination);
+  channelSplitterNode.connect(audioContext.destination, 0);
 }
 
 function signal(message)
