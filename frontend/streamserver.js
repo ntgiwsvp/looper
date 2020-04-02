@@ -18,7 +18,7 @@ async function startServer()
 {
   var metronome, clickBuffer;
 
-  console.log("Creating audio contect.");
+  console.log("Creating audio context.");
   audioContext = new AudioContext({sampleRate});
   console.log("Audio context sample rate: %.0f Hz.", audioContext.sampleRate);
 

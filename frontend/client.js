@@ -21,7 +21,7 @@ async function startStream()
   sessionId = document.getElementById("sessionId").value;
   console.log("Joining session %s.", sessionId);
 
-  console.log("Creating audio contect.");
+  console.log("Creating audio context.");
   audioContext = new AudioContext({sampleRate});
   console.log("Audio context sample rate: %.0f Hz.", audioContext.sampleRate);
 
