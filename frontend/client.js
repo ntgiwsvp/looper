@@ -15,7 +15,8 @@ function initDocument()
 
 async function startStream()
 {
-  var userInputStream, description, userInputNode, serverOutputNode;
+  var userInputStream, description, userInputNode, serverOutputNode,
+    channelMergerNode;
 
   sessionId = document.getElementById("sessionId").value;
   console.log("Joining session %s.", sessionId);
@@ -46,9 +47,13 @@ async function startStream()
   console.log("Creating user input node.");
   userInputNode = new MediaStreamAudioSourceNode(audioContext, {mediaStream: userInputStream});
 
+  console.log("Creating channel merger node.");
+  channelMergerNode = new ChannelMergerNode(audioContext, {numberOfInputs: 2});
+  userInputNode.connect(channelMergerNode, 0, 0);
+
   console.log("Creating server output node.")
   serverOutputNode = new MediaStreamAudioDestinationNode(audioContext);
-  userInputNode.connect(serverOutputNode);
+  channelMergerNode.connect(serverOutputNode);
 
   console.log("Adding track to connection.");
   connection.addTrack(serverOutputNode.stream.getAudioTracks()[0]);
