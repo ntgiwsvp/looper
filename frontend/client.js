@@ -153,7 +153,8 @@ function gotRemoteTrack(event)
     1000*latency,
     1000*(loopLength - latency));
   channelSplitterNode.connect(delayNode, 0);
-  delayNode.connect(audioContext.destination);
+  //delayNode.connect(audioContext.destination);
+  channelSplitterNode.connect(audioContext.destination, 1);
 }
 
 function signal(message)

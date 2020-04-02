@@ -47,9 +47,9 @@ async function startServer()
   channelSplitterNode(s)* -----1-----> channelMergerNode(s)*
            |                                  |
            +-----0------> gainNode -----0-----+
-                           |    A
-                           V    |
-                          delayNode
+                           |    A             |
+                           V    |             |
+                          delayNode        metronome
 
                                                   *created on demand
 */
@@ -60,7 +60,8 @@ async function startServer()
 
   // Starting metronome at 120 bpm.
   clickBuffer = await loadAudioBuffer("snd/CYCdh_K1close_ClHat-07.wav");
-  metronome = new Metronome(audioContext, clientOutputNode, 120, clickBuffer);
+  metronome = new Metronome(audioContext, channelMergerNode, 120,
+    clickBuffer, 0);
   metronome.start();
 
   console.log("Creating connection to signaling server.");
