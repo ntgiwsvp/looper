@@ -10,7 +10,36 @@
     <p>
       This is a tool for making music together in times of quarantine.
       Still work in progress.  To try anyway (no guarantees!), proceed as
-      follows:
+      indicated below.
+    </p>
+    <p>Notes/recommendations</p>
+    <ul>
+      <li>
+        At each page you will have to select the sample rate.  48000 Hz is
+        the only one that really makes sense here, since 44100 Hz is not
+        supported by the Opus codex (RFC 7587).  However it seems some systems
+        have the recording rate to 44100 Hz by default, you have to choose
+        44100 Hz on those (or proceed as indicated in the next bullet point.)
+      </li>
+      <li>
+        On Ubuntu, it can happen that the default sample rate is 44100 Hz.
+        In this case, you are encouraged to switch to 48000 Hz by
+        adding the line "default-sample-rate = 48000" to /etc/pulse/daemon.conf.
+        (Remove the initial "; " if present.) 
+      </li>
+      <li>
+        In any case the sample rate for the session and all clients must match.
+      </li>
+      <li>
+        This only works with Firefox at the moment.
+      </li>
+      <li>
+        Error signaling is still mostly via the developer console.  Enter
+        Ctrl + Shift + K on each page to open it and keep it open.
+      </li>
+    </ul>
+    <p>
+      Steps to use:
     </p>
     <ol>
       <li>
