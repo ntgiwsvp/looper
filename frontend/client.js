@@ -131,8 +131,10 @@ function gotRemoteTrack(event)
   console.log("Creating media stream.")
   mediaStream = new MediaStream([event.track]);
 
-  console.log("Creating audio nodes.")
+  console.log("Creating server input node.")
   serverInputNode = new MediaStreamAudioSourceNode(audioContext, {mediaStream});
+
+  console.log("Creating delay node");
   latency = document.getElementById("latency").value / 1000;
   delayNode = new DelayNode(audioContext, {
     delayTime:    loopLength - latency,
@@ -140,8 +142,6 @@ function gotRemoteTrack(event)
   console.log("Latency is %.0f ms, delaying output by %.0f ms.",
     1000*latency,
     1000*(loopLength - latency));
-
-  console.log("Connecting audio nodes.")
   serverInputNode.connect(delayNode);
   delayNode.connect(audioContext.destination);
 }
