@@ -56,7 +56,9 @@ async function startStream()
   console.log("Creating metronome.")
   clickBuffer = await loadAudioBuffer("snd/CYCdh_K1close_ClHat-07.wav");
   metronome = new Metronome(audioContext, channelMergerNode, 60, clickBuffer, 1);
-  
+  //metronome = new Metronome(audioContext, audioContext.destination, 60, clickBuffer);
+  metronome.start(-1);
+
   console.log("Creating server output node.")
   serverOutputNode = new MediaStreamAudioDestinationNode(audioContext);
   channelMergerNode.connect(serverOutputNode);
@@ -153,8 +155,7 @@ function gotRemoteTrack(event)
     1000*latency,
     1000*(loopLength - latency));
   channelSplitterNode.connect(delayNode, 0);
-  //delayNode.connect(audioContext.destination);
-  channelSplitterNode.connect(audioContext.destination, 1);
+  delayNode.connect(audioContext.destination);
 }
 
 function signal(message)
