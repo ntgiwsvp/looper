@@ -1,11 +1,12 @@
 export default class Metronome
 {
-  constructor(audioContext, outputNode, tempo, buffer)
+  constructor(audioContext, outputNode, tempo, buffer, outputNodeInput = 0)
   {
-    this.audioContext = audioContext;
-    this.outputNode   = outputNode;
-    this.period       = 60/tempo;
-    this.buffer       = buffer;
+    this.audioContext    = audioContext;
+    this.outputNode      = outputNode;
+    this.period          = 60/tempo;
+    this.buffer          = buffer;
+    this.outputNodeInput = outputNodeInput;
   }
 
   playClick(t = 0)
@@ -13,7 +14,7 @@ export default class Metronome
     var node;
   
     node = new AudioBufferSourceNode(this.audioContext, {buffer: this.buffer});
-    node.connect(this.outputNode);
+    node.connect(this.outputNode, 0, this.outputNodeInput);
     node.start(t)
   }
   
