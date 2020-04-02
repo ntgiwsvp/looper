@@ -8,6 +8,7 @@ var audioContext; // for Web Audio API
 var clickBuffer, clickBufferDuration; // click for latency detection
 var delayNode, userLatency; // needs to be global to access from processAudio
 var sampleRate;
+var loopLength;
 
 document.addEventListener("DOMContentLoaded", initDocument);
 
@@ -18,17 +19,19 @@ function initDocument()
   document.getElementById("startButton").onclick = startStream;
 }
 
-/*
-                                              * created in gotRemoteTrack
+/*                                               * created in gotRemoteTrack
 
+USER                        |                  A
+----------------------------+------------------+------------------------------
+CLIENT                      V                  |
                      userInputNode       destination      scriptProcessor*
                             |                  A                 A
                             V                  |                 |
                        delay Node              |            convolverNode*
-                            |                  0                 A
-                            V 0                |                 |
-metronome --1--> channelMergerNode     channelSplitterNode* --1--+
-                            |                  A
+                            |                  | 0               A
+            1               V 0                |                 |
+metronome -----> channelMergerNode     channelSplitterNode* -----+
+                            |                  A              1
                             V                  |
                     serverOutputNode    serverInputNode*
 CLIENT                      |                  A
@@ -38,7 +41,7 @@ SERVER                      V                  |
 async function startStream()
 {
   var userInputStream, description, userInputNode, serverOutputNode,
-    channelMergerNode, metronome;
+    channelMergerNode, metronome, tempo, loopBeats;
 
   sessionId = document.getElementById("sessionId").value;
   document.getElementById("sessionId").disabled = true;
@@ -48,6 +51,19 @@ async function startStream()
   document.getElementById("sampleRate").disabled = true;
   console.log("Sample rate: %.0f Hz.", sampleRate);
 
+  tempo      = document.getElementById("tempo").value * 1;
+  loopBeats  = document.getElementById("loopBeats").value * 1;
+  loopLength = 60/tempo*loopBeats; // Theoretical loop lengh, but
+  loopLength = Math.round(loopLength*sampleRate/128)*128/sampleRate;
+  tempo      = 60/loopLength*loopBeats;
+  // according to the Web Audio API specification, "If DelayNode is part of a
+  // cycle, then the value of the delayTime attribute is clamped to a minimum
+  // of one render quantum."  We do this explicitly here so we can sync the
+  // metronome.
+  document.getElementById("loopBeats").disabled = true;
+  document.getElementById("tempo").disabled = true;
+  console.log("Loop lengh is %.5f s, tempos is %.1f bpm.", loopLength, tempo);
+
   userLatency = document.getElementById("latency").value / 1000;
   document.getElementById("latency").disabled = true
   console.log("User latency is %.2f ms.", 1000*userLatency);
@@ -56,7 +72,8 @@ async function startStream()
   
   console.log("Creating audio context.");
   audioContext = new AudioContext({sampleRate});
-
+  console.log("Audio context sample rate: %f", audioContext.sampleRate);
+  
   console.log("Creating connection to signaling server.");
   signalingChannel = new WebSocket(signalingServerUrl);
   signalingChannel.onmessage         = receiveMessage;

@@ -17,11 +17,24 @@ function initDocument()
 
 async function startServer()
 {
-  var metronome, clickBuffer;
+  var metronome, clickBuffer, loopLength, loopBeats, tempo;
 
   sampleRate = document.getElementById("sampleRate").value * 1;
   document.getElementById("sampleRate").disabled = true;
   console.log("Sample rate: %.0f Hz.", sampleRate);
+
+  tempo      = document.getElementById("tempo").value * 1;
+  loopBeats  = document.getElementById("loopBeats").value * 1;
+  loopLength = 60/tempo*loopBeats; // Theoretical loop lengh, but
+  loopLength = Math.round(loopLength*sampleRate/128)*128/sampleRate;
+  tempo      = 60/loopLength*loopBeats;
+  // according to the Web Audio API specification, "If DelayNode is part of a
+  // cycle, then the value of the delayTime attribute is clamped to a minimum
+  // of one render quantum."  We do this explicitly here so we can sync the
+  // metronome.
+  document.getElementById("loopBeats").disabled = true;
+  document.getElementById("tempo").disabled = true;
+  console.log("Loop lengh is %.5f s, tempos is %.1f bpm.", loopLength, tempo);
 
   document.getElementById("startServerButton").disabled = true;
 
@@ -63,13 +76,9 @@ SERVER           V                                  |
                                                   *created on demand
 */
 
-
-
-
-
-  // Starting metronome at 120 bpm.
   clickBuffer = await loadAudioBuffer("snd/CYCdh_K1close_ClHat-07.wav");
-  metronome = new Metronome(audioContext, channelMergerNode, 120,
+  console.log("Starting metronome.")
+  metronome = new Metronome(audioContext, channelMergerNode, tempo,
     clickBuffer, 0);
   metronome.start();
 
