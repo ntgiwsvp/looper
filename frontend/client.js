@@ -124,7 +124,7 @@ function sendIceCandidate(event)
 
 function gotRemoteTrack(event)
 {
-  var mediaStream, serverInputNode, delayNode;
+  var mediaStream, serverInputNode, delayNode, channelSplitterNode;
 
   console.log("Got remote media stream track.")
 
@@ -134,6 +134,10 @@ function gotRemoteTrack(event)
   console.log("Creating server input node.")
   serverInputNode = new MediaStreamAudioSourceNode(audioContext, {mediaStream});
 
+  console.log("Creating channel splitter node.")
+  channelSplitterNode = new ChannelSplitterNode(audioContext, {numberOfOutputs: 2});
+  serverInputNode.connect(channelSplitterNode);
+  
   console.log("Creating delay node");
   latency = document.getElementById("latency").value / 1000;
   delayNode = new DelayNode(audioContext, {
@@ -142,7 +146,7 @@ function gotRemoteTrack(event)
   console.log("Latency is %.0f ms, delaying output by %.0f ms.",
     1000*latency,
     1000*(loopLength - latency));
-  serverInputNode.connect(delayNode);
+  channelSplitterNode.connect(delayNode, 0);
   delayNode.connect(audioContext.destination);
 }
 
