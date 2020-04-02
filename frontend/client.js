@@ -5,6 +5,7 @@ import Metronome from "./metronome.js";
 var signalingChannel, ownId, sessionId; // for Websocket
 var connection; // for RTC
 var audioContext; // for Web Audio API
+var clickBuffer; // click for latency detection
 
 document.addEventListener("DOMContentLoaded", initDocument);
 
@@ -18,13 +19,13 @@ function initDocument()
 /*
                                               * created in gotRemoteTrack
 
-                     userInputNode       destination
-                            |                  A
-                            V                  |
-                       delay Node              |
-                            |                  0
-                            V 0                |
-metronome --1--> channelMergerNode     channelSplitterNode* ----1---> analyzer
+                     userInputNode       destination      scriptProcessor*
+                            |                  A                 A
+                            V                  |                 |
+                       delay Node              |            convolverNode*
+                            |                  0                 A
+                            V 0                |                 |
+metronome --1--> channelMergerNode     channelSplitterNode* --1--+
                             |                  A
                             V                  |
                     serverOutputNode    serverInputNode*
@@ -35,7 +36,7 @@ SERVER                      V                  |
 async function startStream()
 {
   var userInputStream, description, userInputNode, serverOutputNode,
-    channelMergerNode, metronome, clickBuffer, delayNode;
+    channelMergerNode, metronome, delayNode;
 
   sessionId = document.getElementById("sessionId").value;
   console.log("Joining session %s.", sessionId);
@@ -83,7 +84,6 @@ async function startStream()
   console.log("Creating metronome.")
   clickBuffer = await loadAudioBuffer("snd/CYCdh_K1close_ClHat-07.wav");
   metronome = new Metronome(audioContext, channelMergerNode, 60, clickBuffer, 1);
-  //metronome = new Metronome(audioContext, audioContext.destination, 60, clickBuffer);
   metronome.start(-1);
 
   console.log("Creating server output node.")
@@ -159,7 +159,8 @@ function sendIceCandidate(event)
 
 function gotRemoteTrack(event)
 {
-  var mediaStream, serverInputNode, channelSplitterNode;
+  var mediaStream, serverInputNode, channelSplitterNode, convolverNode,
+    scriptProcessor, reverseBuffer;
 
   console.log("Got remote media stream track.")
 
@@ -172,8 +173,17 @@ function gotRemoteTrack(event)
   console.log("Creating channel splitter node.")
   channelSplitterNode = new ChannelSplitterNode(audioContext, {numberOfOutputs: 2});
   serverInputNode.connect(channelSplitterNode);
-  
   channelSplitterNode.connect(audioContext.destination, 0);
+
+  console.log("Creating convolver node.");
+  reverseBuffer = revertBuffer(clickBuffer);
+  convolverNode = new ConvolverNode(audioContext, {buffer: reverseBuffer});
+  channelSplitterNode.connect(convolverNode, 1);
+
+  console.log("Creating script processor.");
+  scriptProcessor = audioContext.createScriptProcessor(16384, 1, 0);
+  //scriptProcessor.onaudioprocess = processAudio;
+  convolverNode.connect(scriptProcessor);
 }
 
 function signal(message)
@@ -193,4 +203,23 @@ async function loadAudioBuffer(url)
   buffer = await audioContext.decodeAudioData(audioData);
   console.log("Loaded audio data from %s.", url);  
   return buffer;
+}
+
+function revertBuffer(buffer)
+{
+  var i, array, reverseBuffer;
+
+  reverseBuffer = audioContext.createBuffer(buffer.numberOfChannels,
+      buffer.length, buffer.sampleRate);
+
+  array = new Float32Array(buffer.length);
+  
+  for (i = 0; i < buffer.numberOfChannels; i++)
+  {
+    buffer.copyFromChannel(array, i, 0);
+    array.reverse();
+    reverseBuffer.copyToChannel(array, i, 0);
+  }
+
+  return reverseBuffer;
 }
