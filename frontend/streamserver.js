@@ -41,15 +41,18 @@ async function startServer()
   channelMergerNode.connect(clientOutputNode);
 
 /*
-    clientInputNode(s)*                clientOutputNode(s)*
-           |                                  A
-           V                                  |
-  channelSplitterNode(s)* -----1-----> channelMergerNode(s)*
-           |                                  |
-           +-----0------> gainNode -----0-----+
-                           |    A             |
-                           V    |             |
-                          delayNode        metronome
+CLIENT           |                                  A
+-----------------+----------------------------------+-------------------------
+SERVER           V                                  |
+          clientInputNode(s)*                clientOutputNode(s)*
+                 |                                  A
+                 V                                  |
+        channelSplitterNode(s)* -----1-----> channelMergerNode(s)*
+                 |                                  |
+                 +-----0------> gainNode -----0-----+
+                                 |    A             |
+                                 V    |             |
+                                delayNode        metronome
 
                                                   *created on demand
 */

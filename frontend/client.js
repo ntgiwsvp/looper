@@ -15,6 +15,23 @@ function initDocument()
   document.getElementById("startButton").onclick = startStream;
 }
 
+/*
+                                              * created in gotRemoteTrack
+
+                     userInputNode       destination
+                            |                  A
+                            V                  |
+                       delay Node              |
+                            |                  0
+                            V 0                |
+metronome --1--> channelMergerNode     channelSplitterNode* ----1---> analyzer
+                            |                  A
+                            V                  |
+                    serverOutputNode    serverInputNode*
+CLIENT                      |                  A
+----------------------------+------------------+------------------------------
+SERVER                      V                  |
+*/
 async function startStream()
 {
   var userInputStream, description, userInputNode, serverOutputNode,
