@@ -6,6 +6,7 @@ var signalingChannel, ownId, sessionId; // for Websocket
 var connection; // for RTC
 var audioContext; // for Web Audio API
 var clickBuffer, clickBufferDuration; // click for latency detection
+var delayNode, userLatency; // needs to be global to access from processAudio
 
 document.addEventListener("DOMContentLoaded", initDocument);
 
@@ -36,7 +37,7 @@ SERVER                      V                  |
 async function startStream()
 {
   var userInputStream, description, userInputNode, serverOutputNode,
-    channelMergerNode, metronome, delayNode;
+    channelMergerNode, metronome;
 
   sessionId = document.getElementById("sessionId").value;
   console.log("Joining session %s.", sessionId);
@@ -68,13 +69,8 @@ async function startStream()
   userInputNode = new MediaStreamAudioSourceNode(audioContext, {mediaStream: userInputStream});
 
   console.log("Creating delay node");
-  latency = document.getElementById("latency").value / 1000;
-  console.log("Latency is %.0f ms, delaying output by %.0f ms.",
-    1000*latency,
-    1000*(loopLength - latency));
-  delayNode = new DelayNode(audioContext, {
-    delayTime:    loopLength - latency,
-    maxDelayTime: loopLength          })
+  userLatency = document.getElementById("latency").value / 1000;
+  delayNode = new DelayNode(audioContext, {maxDelayTime: loopLength})
   userInputNode.connect(delayNode);
     
   console.log("Creating channel merger node.");
@@ -231,7 +227,7 @@ function processAudio(event)
 {
   var array, i, networkLatency, bufferSize, bufferDuration;
   var startSecond, endSecond, boundarySample, currentPlaybackTime;
-  var playbackTimeAdjustment;
+  var playbackTimeAdjustment, totalLatency;
 
   array          = event.inputBuffer.getChannelData(0);
   bufferSize     = event.inputBuffer.length;
@@ -268,10 +264,17 @@ function processAudio(event)
     // Perform calculation
     networkLatency = frac(argmax - clickBufferDuration - bufferDuration
       - (playbackTimeAdjustment - 1)/sampleRate);
-    if (networkLatency > 0.95) networkLatency -= 1; // underflow should not happen, but just in case :-)
+    if (networkLatency > 0.95) networkLatency -= 1; // underflow should not
+      // happen, but just in case :-)
 
-    console.log("Network latency: %.2f ms = %.0f samples",
-      1000*networkLatency, Math.round(networkLatency*sampleRate));
+    totalLatency = userLatency + networkLatency;
+
+    console.log("Latency: %.2f ms (user) + %.2f ms (network) = %.2f ms.",
+      1000*userLatency,
+      1000*networkLatency,
+      1000*totalLatency);
+
+    delayNode.delayTime.value = loopLength - totalLatency;
 
     // Process part of buffer in end second
     max = argmax = -1;
