@@ -68,6 +68,9 @@ SERVER           V                                  |
                  V                                  |
         channelSplitterNode(s)* -----1-----> channelMergerNode(s)*
                  |                                  |
+                 V                                  |
+           clientGainNode(s)*                       |
+                 |                                  |
                  +-----0------> gainNode -----0-----+
                                  |    A             |
                                  V    |             |
@@ -167,7 +170,7 @@ function sendIceCandidate(event)
 
 function gotRemoteTrack(event)
 {
-  var mediaStream, clientInputNode, channelSplitterNode;
+  var mediaStream, clientInputNode, channelSplitterNode, clientGainNode;
 
   console.log("Got remote media stream track.")
 
@@ -180,8 +183,17 @@ function gotRemoteTrack(event)
   console.log("Creating channel splitter node.")
   channelSplitterNode = new ChannelSplitterNode(audioContext, {numberOfOutputs: 2});
   clientInputNode.connect(channelSplitterNode);
-  channelSplitterNode.connect(gainNode, 0);
   channelSplitterNode.connect(channelMergerNode, 1, 1);
+
+  console.log("Creating client gain node.")
+  clientGainNode = new GainNode(audioContext, {gain: 0});
+  clientGainNode.gain.setValueAtTime(0, audioContext.currentTime + 0.5);
+  clientGainNode.gain.linearRampToValueAtTime(1, audioContext.currentTime + 1);
+  channelSplitterNode.connect(clientGainNode, 0);
+  clientGainNode.connect(gainNode);
+  // This is to get rid of the initial "click" when new clients connect.
+  // New clients will be silenced for 0.5 seconds, then brought to full volume
+  // for another 0.5 seconds.
 }
 
 function signal(message)
