@@ -17,7 +17,7 @@ function initDocument()
 
 async function startServer()
 {
-  var metronome, clickBuffer, loopLength, loopBeats, tempo;
+  var metronome, clickBuffer, loopLength, loopBeats, tempo, metronomeGain;
 
   sampleRate = document.getElementById("sampleRate").value * 1;
   document.getElementById("sampleRate").disabled = true;
@@ -38,6 +38,9 @@ async function startServer()
 
   loopGain = document.getElementById("loopGain").value;
   document.getElementById("loopGain").disabled = true;
+
+  metronomeGain = document.getElementById("metronomeGain").value;
+  document.getElementById("metronomeGain").disabled = true;
 
   document.getElementById("startServerButton").disabled = true;
 
@@ -85,7 +88,7 @@ SERVER           V                                  |
   clickBuffer = await loadAudioBuffer("snd/CYCdh_K1close_ClHat-07.wav");
   console.log("Starting metronome.")
   metronome = new Metronome(audioContext, channelMergerNode, tempo,
-    clickBuffer, 0);
+    clickBuffer, 0, metronomeGain);
   metronome.start();
 
   console.log("Creating connection to signaling server.");
