@@ -10,6 +10,10 @@
   <body>
     <h1>Session Manager</h1>
     <p>
+      The following parameters must be also entered at each client exactly
+      the same way:
+    </p>
+    <p>
       Sample rate:
       <select id="sampleRate">
         <option value="44100">44100 Hz</option>
@@ -62,6 +66,13 @@
       Loop lenght:
       <input type="number" id=loopBeats value="4"/>
       beats.
+    </p>
+    <p>
+      The following parameters only need to be set on session level:
+    </p>
+    <p>
+      Decay factor: <input id="loopGain" value="0.9"/>
+      Note to the sorcerer's apprentice:  Don't pick values &gt;1.
     </p>
     <p><button id="startServerButton">Start Session</button></p>
     <p>Session ID: <span id="sessionId"></span></p>

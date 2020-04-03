@@ -5,7 +5,7 @@ import Metronome from "./metronome.js";
 var signalingChannel, ownId, clientId; // for Websocket 
 var connection; // For RTC
 var audioContext, clientOutputNode, gainNode, delayNode, channelMergerNode,
-  sampleRate; // for Web Audio API
+  sampleRate, loopGain; // for Web Audio API
 
 document.addEventListener("DOMContentLoaded", initDocument);
 
@@ -36,13 +36,16 @@ async function startServer()
   document.getElementById("tempo").disabled = true;
   console.log("Loop lengh is %.5f s, tempos is %.1f bpm.", loopLength, tempo);
 
+  loopGain = document.getElementById("loopGain").value;
+  document.getElementById("loopGain").disabled = true;
+
   document.getElementById("startServerButton").disabled = true;
 
   console.log("Creating audio context.");
   audioContext = new AudioContext({sampleRate});
 
   console.log("Creating gain node.");
-  gainNode = new GainNode(audioContext, {gain: 0.9});
+  gainNode = new GainNode(audioContext, {gain: loopGain});
 
   console.log("Creating delay node.");
   delayNode = new DelayNode(audioContext, {
