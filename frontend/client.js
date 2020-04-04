@@ -39,7 +39,15 @@ CLIENT                      |                  A
 ----------------------------+------------------+------------------------------
 SERVER                      V                  |
 */
-async function startStream()
+function startStream()
+{
+  console.log("Creating connection to signaling server.");
+  signalingChannel = new WebSocket(signalingServerUrl);
+  signalingChannel.onmessage         = receiveMessage;
+  signalingChannel.onopen            = continueSetup;
+}
+
+async function continueSetup()
 {
   var userInputStream, description, userInputNode, serverOutputNode,
     channelMergerNode, metronome, tempo, loopBeats;
@@ -75,13 +83,6 @@ async function startStream()
   audioContext = new AudioContext({sampleRate});
   console.log("Audio context sample rate: %f", audioContext.sampleRate);
   
-  console.log("Creating connection to signaling server.");
-  signalingChannel = new WebSocket(signalingServerUrl);
-  signalingChannel.onmessage         = receiveMessage;
-  // XXX Dirty trick that needs to be corrected:  Time to setup WebSocket
-  //     is hidden while user is approving media acces.  Should use
-  //     WebSocket.onopen to make sure not to send messages too early.
-
   console.log("Creating RTC connection.")
   connection = new RTCPeerConnection({iceServers: [{urls: stunServerUrl}]});
   connection.onicecandidate          = sendIceCandidate;
