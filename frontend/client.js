@@ -1,11 +1,12 @@
 'use strict';
 
 import Metronome from "./metronome.js";
+import Correlator from "./correlator.js";
 
 var signalingChannel, ownId, sessionId; // for Websocket
 var connection; // for RTC
 var audioContext; // for Web Audio API
-var clickBuffer, clickBufferDuration; // click for latency detection
+var clickBuffer; // click for latency detection
 var delayNode, userLatency; // needs to be global to access from processAudio
 var sampleRate;
 var loopLength;
@@ -106,7 +107,6 @@ async function startStream()
 
   console.log("Creating metronome.")
   clickBuffer = await loadAudioBuffer("snd/CYCdh_K1close_ClHat-07.wav");
-  clickBufferDuration = clickBuffer.duration;
   metronome = new Metronome(audioContext, channelMergerNode, 60, clickBuffer, 1);
   metronome.start(-1);
 
@@ -183,8 +183,7 @@ function sendIceCandidate(event)
 
 function gotRemoteTrack(event)
 {
-  var mediaStream, serverInputNode, channelSplitterNode, convolverNode,
-    scriptProcessor, reverseBuffer;
+  var mediaStream, serverInputNode, channelSplitterNode;
 
   console.log("Got remote media stream track.")
 
@@ -199,15 +198,21 @@ function gotRemoteTrack(event)
   serverInputNode.connect(channelSplitterNode);
   channelSplitterNode.connect(audioContext.destination, 0);
 
-  console.log("Creating convolver node.");
-  reverseBuffer = revertBuffer(clickBuffer);
-  convolverNode = new ConvolverNode(audioContext, {buffer: reverseBuffer});
-  channelSplitterNode.connect(convolverNode, 1);
+  console.log("Creating correlator")
+  new Correlator(audioContext, channelSplitterNode, clickBuffer,
+    updateDelayNode, 1);
+}
 
-  console.log("Creating script processor.");
-  scriptProcessor = audioContext.createScriptProcessor(16384, 1, 0);
-  scriptProcessor.onaudioprocess = processAudio;
-  convolverNode.connect(scriptProcessor);
+function updateDelayNode(networkLatency)
+{
+  const totalLatency = userLatency + networkLatency;
+
+  console.log("Latency: %.2f ms (user) + %.2f ms (network) = %.2f ms.",
+    1000*userLatency,
+    1000*networkLatency,
+    1000*totalLatency);
+
+  delayNode.delayTime.value = loopLength - totalLatency;
 }
 
 function signal(message)
@@ -227,94 +232,4 @@ async function loadAudioBuffer(url)
   buffer = await audioContext.decodeAudioData(audioData);
   console.log("Loaded audio data from %s.", url);  
   return buffer;
-}
-
-function revertBuffer(buffer)
-{
-  var i, array, reverseBuffer;
-
-  reverseBuffer = audioContext.createBuffer(buffer.numberOfChannels,
-      buffer.length, buffer.sampleRate);
-
-  array = new Float32Array(buffer.length);
-  
-  for (i = 0; i < buffer.numberOfChannels; i++)
-  {
-    buffer.copyFromChannel(array, i, 0);
-    array.reverse();
-    reverseBuffer.copyToChannel(array, i, 0);
-  }
-
-  return reverseBuffer;
-}
-
-var max, argmax, initialPlaybackTime;
-
-function processAudio(event)
-{
-  var array, i, networkLatency, bufferSize, bufferDuration;
-  var startSecond, endSecond, boundarySample, currentPlaybackTime;
-  var playbackTimeAdjustment, totalLatency;
-
-  array          = event.inputBuffer.getChannelData(0);
-  bufferSize     = event.inputBuffer.length;
-  bufferDuration = event.inputBuffer.duration;
-  startSecond    = Math.floor(event.playbackTime);
-  endSecond      = Math.floor(event.playbackTime + bufferDuration);
-
-  if (!max) {max = argmax = -1};
-
-  // Dirty trick
-  currentPlaybackTime = Math.round(event.playbackTime*sampleRate) % 16384;
-  if (!initialPlaybackTime) initialPlaybackTime = currentPlaybackTime;
-  playbackTimeAdjustment = (currentPlaybackTime - initialPlaybackTime) % 16384;
-
-  if (startSecond == endSecond) // Buffer contained within one second
-  {
-    for (i = 0; i < bufferSize; i++) if (array[i] > max)
-    {
-      argmax = frac(event.playbackTime + i/sampleRate);
-      max    = array[i];
-    }
-  }
-  else // Buffer spans two seconds
-  {
-    // Process part of buffer in start second
-    boundarySample = Math.round((endSecond - event.playbackTime)*sampleRate);
-
-    for (i = 0; i < boundarySample; i++) if (array[i] > max)
-    {
-      argmax = frac(event.playbackTime + i/sampleRate);
-      max = array[i];
-    }
-
-    // Perform calculation
-    networkLatency = frac(argmax - clickBufferDuration - bufferDuration
-      - (playbackTimeAdjustment - 1)/sampleRate);
-    if (networkLatency > 0.95) networkLatency -= 1; // underflow should not
-      // happen, but just in case :-)
-
-    totalLatency = userLatency + networkLatency;
-
-    console.log("Latency: %.2f ms (user) + %.2f ms (network) = %.2f ms.",
-      1000*userLatency,
-      1000*networkLatency,
-      1000*totalLatency);
-
-    delayNode.delayTime.value = loopLength - totalLatency;
-
-    // Process part of buffer in end second
-    max = argmax = -1;
-    for (i = boundarySample; i < bufferSize; i++) if (array[i] > max)
-    {
-      argmax = frac(event.playbackTime + i/sampleRate);
-      max = array[i];
-    }
-
-  }
-}
-
-function frac(x)
-{
-  return x - Math.floor(x);
 }
