@@ -16,11 +16,10 @@ export default class Correlator
     inputNode.connect(convolverNode, inputNodeOutput);
 
     console.log("Creating script processor.");
-    const scriptProcessor = audioContext.createScriptProcessor(16384, 1, 0);
-    //scriptProcessor = audioContext.createScriptProcessor(16384, 1, 1);
+    const scriptProcessor = audioContext.createScriptProcessor(16384, 1, 1);
     scriptProcessor.onaudioprocess = processAudio;
     convolverNode.connect(scriptProcessor);
-    //scriptProcessor.connect(audioContext.destination);
+    scriptProcessor.connect(audioContext.destination);
     // Need to connect script processor to destination, otherwise
     // onaudioprocess would not be fired in Chrome.  See
     // https://stackoverflow.com/q/27324608
