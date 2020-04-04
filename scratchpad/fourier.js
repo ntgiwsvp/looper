@@ -29,6 +29,7 @@ async function start()
   const audioContext = new AudioContext({sampleRate});
 
   oscillatorNode = new OscillatorNode(audioContext);
+  oscillatorNode.start()
 
   const mediaStream = await navigator.mediaDevices.getUserMedia({audio: true});
   const userInputNode = new MediaStreamAudioSourceNode(audioContext, {mediaStream});
@@ -45,7 +46,6 @@ function setFrequency()
 {
   const frequency = document.getElementById("frequencyInput").value
   oscillatorNode.frequency.value = frequency;
-  oscillatorNode.start()
   console.log(frequency/sampleRate*fftSize);
 
 }
