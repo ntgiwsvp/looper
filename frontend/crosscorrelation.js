@@ -1,6 +1,7 @@
 "use strict";
 
 import Metronome from "./metronome.js";
+import Correlator from "./correlator.js";
 
 var audioContext, sampleRate; // for Web Audio API
 
@@ -18,7 +19,7 @@ var clickBufferDuration;
 
 async function start()
 {
-  var metronome, convolverNode, clickBuffer, reverseBuffer, scriptProcessor;
+  var metronome, clickBuffer;
   var inputNode, mediaStream;
 
   sampleRate = document.getElementById("sampleRate").value * 1;
@@ -59,103 +60,19 @@ async function start()
 
   metronome.start(-1);
 
-  // convolver node
-  reverseBuffer = revertBuffer(clickBuffer);
-  convolverNode = new ConvolverNode(audioContext, {buffer: reverseBuffer});
-  inputNode.connect(convolverNode);
-
-  // script processor node
-  scriptProcessor = audioContext.createScriptProcessor(16384, 1, 0);
-  //scriptProcessor = audioContext.createScriptProcessor(16384, 1, 1);
-  scriptProcessor.onaudioprocess = processAudio;
-  convolverNode.connect(scriptProcessor);
-  //scriptProcessor.connect(audioContext.destination);
-  // Need to connect script processor to destination, otherwise
-  // onaudioprocess would not be fired in Chrome.  See
-  // https://stackoverflow.com/q/27324608
+  console.log("Creating correlator")
+  new Correlator(audioContext, inputNode, clickBuffer, updateOutput);
 
   console.log("running...")
 }
 
-var max, argmax, initialPlaybackTime;
-
-function processAudio(event)
+function updateOutput(latency)
 {
-  var array, i, latency, bufferSize, bufferDuration;
-  var startSecond, endSecond, boundarySample, currentPlaybackTime;
-  var playbackTimeAdjustment;
+  console.log("Latency: %.2f ms = %.0f samples",
+    1000*latency, Math.round(latency*sampleRate));
 
-  array          = event.inputBuffer.getChannelData(0);
-  bufferSize     = event.inputBuffer.length;
-  bufferDuration = event.inputBuffer.duration;
-  startSecond    = Math.floor(event.playbackTime);
-  endSecond      = Math.floor(event.playbackTime + bufferDuration);
-
-  if (!max) {max = argmax = -1};
-
-  // Dirty trick
-  currentPlaybackTime = Math.round(event.playbackTime*sampleRate) % 16384;
-  if (!initialPlaybackTime) initialPlaybackTime = currentPlaybackTime;
-  playbackTimeAdjustment = (currentPlaybackTime - initialPlaybackTime) % 16384;
-
-  if (startSecond == endSecond) // Buffer contained within one second
-  {
-    for (i = 0; i < bufferSize; i++) if (array[i] > max)
-    {
-      argmax = frac(event.playbackTime + i/sampleRate);
-      max    = array[i];
-    }
-  }
-  else // Buffer spans two seconds
-  {
-    // Process part of buffer in start second
-    boundarySample = Math.round((endSecond - event.playbackTime)*sampleRate);
-
-    for (i = 0; i < boundarySample; i++) if (array[i] > max)
-    {
-      argmax = frac(event.playbackTime + i/sampleRate);
-      max = array[i];
-    }
-
-    // Perform calculation
-    latency = frac(argmax - clickBufferDuration - bufferDuration
-      - (playbackTimeAdjustment - 1)/sampleRate);
-    if (latency > 0.95) latency -= 1; // underflow should not happen, but just in case :-)
-
-    console.log("Latency: %.2f ms = %.0f samples",
-      1000*latency, Math.round(latency*sampleRate));
-
-    document.getElementById("outputSpan").innerHTML =
-      Math.round(1000*latency) + " ms"
-
-    // Process part of buffer in end second
-    max = argmax = -1;
-    for (i = boundarySample; i < bufferSize; i++) if (array[i] > max)
-    {
-      argmax = frac(event.playbackTime + i/sampleRate);
-      max = array[i];
-    }
-
-  }
-}
-
-function revertBuffer(buffer)
-{
-  var i, array, reverseBuffer;
-
-  reverseBuffer = audioContext.createBuffer(buffer.numberOfChannels,
-      buffer.length, buffer.sampleRate);
-
-  array = new Float32Array(buffer.length);
-  
-  for (i = 0; i < buffer.numberOfChannels; i++)
-  {
-    buffer.copyFromChannel(array, i, 0);
-    array.reverse();
-    reverseBuffer.copyToChannel(array, i, 0);
-  }
-
-  return reverseBuffer;
+  document.getElementById("outputSpan").innerHTML =
+    Math.round(1000*latency) + " ms"
 }
 
 async function loadAudioBuffer(url)
@@ -168,9 +85,4 @@ async function loadAudioBuffer(url)
   buffer = await audioContext.decodeAudioData(audioData);
   console.log("Loaded audio data from %s.", url);  
   return buffer;
-}
-
-function frac(x)
-{
-  return x - Math.floor(x);
 }
