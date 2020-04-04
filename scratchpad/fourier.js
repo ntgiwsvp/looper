@@ -9,8 +9,17 @@ function initDocument()
   document.getElementById("logButton").onclick = logFrequencyData;
 }
 
-const sampleRate = 48000;
-const fftSize = 2048;
+const sampleRate            = 48000;
+const fftSize               = 32768;
+const smoothingTimeConstant = 0;
+
+// From RFC 7587
+const narrowBand    = Math.round( 4000/sampleRate*fftSize);
+const mediumBand    = Math.round( 6000/sampleRate*fftSize);
+const wideBand      = Math.round( 8000/sampleRate*fftSize);
+const superWideBand = Math.round(12000/sampleRate*fftSize);
+const fullBand      = Math.round(20000/sampleRate*fftSize);
+
 var oscillatorNode, analyserNode;
 
 function start()
@@ -20,7 +29,7 @@ function start()
   const audioContext = new AudioContext({sampleRate});
   oscillatorNode = new OscillatorNode(audioContext);
   oscillatorNode.start();
-  analyserNode = new AnalyserNode(audioContext, {fftSize});
+  analyserNode = new AnalyserNode(audioContext, {fftSize, smoothingTimeConstant});
   oscillatorNode.connect(analyserNode);
 
   document.getElementById("setButton").disabled = false;
@@ -39,5 +48,18 @@ function logFrequencyData()
 {
   const Y = new Uint8Array(fftSize/2);
   analyserNode.getByteFrequencyData(Y)
-  console.log(Y);
+
+  const narrowBandMax    = arraySliceMax(Y, 0            , narrowBand   );
+  const mediumBandMax    = arraySliceMax(Y, narrowBand   , mediumBand   );
+  const wideBandMax      = arraySliceMax(Y, mediumBand   , wideBand     );
+  const superWideBandMax = arraySliceMax(Y, wideBand     , superWideBand);
+  const fullBandMax      = arraySliceMax(Y, superWideBand, fullBand     );
+
+  console.log("%d %d %d %d %d", narrowBandMax, mediumBandMax, wideBandMax,
+    superWideBandMax, fullBandMax);
+}
+
+function arraySliceMax(array, start, end)
+{
+  return array.slice(start, end).reduce(Math.max);
 }
