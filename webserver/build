@@ -1,0 +1,5 @@
+#!/bin/sh
+
+npm install express
+npm install https
+npm install pem
