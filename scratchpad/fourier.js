@@ -22,26 +22,32 @@ const fullBand      = Math.round(20000/sampleRate*fftSize);
 
 var oscillatorNode, analyserNode;
 
-function start()
+async function start()
 {
   document.getElementById("startButton").disabled = true;
 
   const audioContext = new AudioContext({sampleRate});
+
   oscillatorNode = new OscillatorNode(audioContext);
-  oscillatorNode.start();
+
+  const mediaStream = await navigator.mediaDevices.getUserMedia({audio: true});
+  const userInputNode = new MediaStreamAudioSourceNode(audioContext, {mediaStream});
+
   analyserNode = new AnalyserNode(audioContext, {fftSize, smoothingTimeConstant});
   oscillatorNode.connect(analyserNode);
+  userInputNode.connect(analyserNode);
 
   document.getElementById("setButton").disabled = false;
+  document.getElementById("logButton").disabled = false;
 }
 
 function setFrequency()
 {
   const frequency = document.getElementById("frequencyInput").value
   oscillatorNode.frequency.value = frequency;
+  oscillatorNode.start()
   console.log(frequency/sampleRate*fftSize);
 
-  document.getElementById("logButton").disabled = false;
 }
 
 function logFrequencyData()
@@ -61,5 +67,5 @@ function logFrequencyData()
 
 function arraySliceMax(array, start, end)
 {
-  return array.slice(start, end).reduce((a,b) => Math.max(a, b));
+  return array.slice(start, end).reduce((a, b) => Math.max(a, b));
 }
