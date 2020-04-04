@@ -61,5 +61,5 @@ function logFrequencyData()
 
 function arraySliceMax(array, start, end)
 {
-  return array.slice(start, end).reduce(Math.max);
+  return array.slice(start, end).reduce((a,b) => Math.max(a, b));
 }
