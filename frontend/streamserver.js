@@ -69,10 +69,10 @@ async function startServer()
 CLIENT           |                                  A
 -----------------+----------------------------------+-------------------------
 SERVER           V                                  |
-          clientInputNode(s)*                clientOutputNode(s)*
+          clientInputNode(s)*                clientOutputNode(s)
                  |                                  A
                  V                                  |
-        channelSplitterNode(s)* -----1-----> channelMergerNode(s)*
+        channelSplitterNode(s)* -----1-----> channelMergerNode(s)
                  |                                  |
                  V                                  |
            clientGainNode(s)*                       |
