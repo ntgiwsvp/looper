@@ -133,11 +133,11 @@ async function receiveOfferMessage(data)
   console.log("Creating RTC connection");
   connection  = new RTCPeerConnection({iceServers: [{urls: stunServerUrl}]});
   connection.onicecandidate          = sendIceCandidate;
-  connection.ontrack                 = gotRemoteTrack
+  connection.onaddstream             = gotRemoteStream;
   connection.onconnectionstatechange = reportConnectionState;
   
   console.log("Sending output to client.");
-  connection.addTrack(clientOutputNode.stream.getAudioTracks()[0]);
+  connection.addStream(clientOutputNode.stream);
 
   console.log("Setting remote description.");
   await connection.setRemoteDescription(data.offer);
@@ -174,14 +174,12 @@ function sendIceCandidate(event)
   }
 }
 
-function gotRemoteTrack(event)
+function gotRemoteStream(event)
 {
   var mediaStream, clientInputNode, channelSplitterNode, clientGainNode;
 
-  console.log("Got remote media stream track.")
-
-  console.log("Creating media stream.")
-  mediaStream = new MediaStream([event.track]);
+  console.log("Got remote media stream.")
+  mediaStream = event.stream;
 
   console.log("Creating client input node.")
   clientInputNode = new MediaStreamAudioSourceNode(audioContext, {mediaStream});
