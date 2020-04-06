@@ -20,6 +20,11 @@ az storage blob upload-batch --account-name looperfrontend \
 
 az storage blob upload-batch --account-name looperfrontend \
                               -d '$web'                    \
+                              -s .                         \
+                             --pattern '*.ico'
+
+az storage blob upload-batch --account-name looperfrontend \
+                              -d '$web'                    \
                               -s snd                       \
                              --destination-path snd
 
