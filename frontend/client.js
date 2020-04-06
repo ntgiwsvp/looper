@@ -127,7 +127,7 @@ async function continueSetup()
   console.log("Local description set.");
 
   console.log("Sending offer.");
-  signal({offer: description});
+  signal({offer: description, to:sessionId});
 }
 
 function receiveMessage(message)
@@ -178,7 +178,7 @@ function sendIceCandidate(event)
   {
     console.log("Sending ICE candidate to signaling server");
     console.log(event.candidate);
-    signal({iceCandidate: event.candidate});
+    signal({iceCandidate: event.candidate, to: sessionId});
   }
 }
 
@@ -216,7 +216,6 @@ function updateDelayNode(networkLatency)
 
 function signal(message)
 {
-  message.to = sessionId;
   message.from = ownId;
   signalingChannel.send(JSON.stringify(message));
 }
