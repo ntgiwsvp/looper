@@ -2,7 +2,7 @@
 
 import Metronome from "./metronome.js";
 
-var signalingChannel, ownId, clientId; // for Websocket 
+var signalingChannel, ownId; // for Websocket 
 var connection; // For RTC
 var audioContext, clientOutputNode, gainNode, delayNode, channelMergerNode,
   sampleRate, loopGain; // for Web Audio API
@@ -123,7 +123,7 @@ function receiveIdMessage(data)
 
 async function receiveOfferMessage(data)
 {
-  var description;
+  var description, clientId;
 
   clientId = data.from;
   
@@ -132,7 +132,15 @@ async function receiveOfferMessage(data)
 
   console.log("Creating RTC connection");
   connection  = new RTCPeerConnection({iceServers: [{urls: stunServerUrl}]});
-  connection.onicecandidate          = sendIceCandidate;
+  connection.onicecandidate = function (event)
+  {
+    if (event.candidate)
+    {
+      console.log("Sending ICE candidate to signaling server");
+      console.log(event.candidate);
+      signal({iceCandidate: event.candidate, to: clientId});
+    }  
+  };
   connection.onaddstream             = gotRemoteStream;
   connection.onconnectionstatechange = reportConnectionState;
   
@@ -151,7 +159,7 @@ async function receiveOfferMessage(data)
   console.log("Local description set.");
 
   console.log("Sending answer.")
-  signal({answer: description});
+  signal({answer: description, to: clientId});
 }
 
 async function receiveIceCandidateMessage(data)
@@ -162,16 +170,6 @@ async function receiveIceCandidateMessage(data)
   console.log("Adding ICE candidate to connection.");
   await connection.addIceCandidate(data.iceCandidate);
   console.log("ICE candidate added to connection.");
-}
-
-function sendIceCandidate(event)
-{
-  if (event.candidate)
-  {
-    console.log("Sending ICE candidate to signaling server");
-    console.log(event.candidate);
-    signal({iceCandidate: event.candidate});
-  }
 }
 
 function gotRemoteStream(event)
@@ -202,7 +200,6 @@ function gotRemoteStream(event)
 
 function signal(message)
 {
-  message.to = clientId;
   message.from = ownId;
   signalingChannel.send(JSON.stringify(message));
 }
