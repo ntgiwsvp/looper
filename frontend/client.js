@@ -27,9 +27,13 @@ function initDocument()
 
 USER                        |                  A
 ----------------------------+------------------+------------------------------
-CLIENT                      V                  |
-                     userInputNode       destination      scriptProcessor*
-                            |                  A                 A
+CLIENT                      |                  |
+                            |             destination
+                            |                  A
+                            |                  +---------> recordingNode*
+                            V                  |
+                     userInputNode             |          scriptProcessor*
+                            |                  |                 A
                             V                  |                 |
                        delay Node              |            convolverNode*
                             |                  | 0               A
