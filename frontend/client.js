@@ -2,6 +2,7 @@
 
 import Metronome from "./metronome.js";
 import Correlator from "./correlator.js";
+import Recorder from "./recorder.js";
 
 var signalingChannel, ownId, sessionId; // for Websocket
 var connection; // for RTC
@@ -10,6 +11,7 @@ var clickBuffer; // click for latency detection
 var delayNode, userLatency; // needs to be global to access from processAudio
 var sampleRate;
 var loopLength;
+var recorder;
 
 document.addEventListener("DOMContentLoaded", initDocument);
 
@@ -18,6 +20,7 @@ function initDocument()
 {
   console.log("Adding event handlers to DOM.")
   document.getElementById("startButton").onclick = startStream;
+  document.getElementById("stopButton").onclick = () => recorder.stop();
 }
 
 /*                                               * created in gotRemoteStream
@@ -200,6 +203,15 @@ function gotRemoteStream(event)
   console.log("Creating correlator")
   new Correlator(audioContext, channelSplitterNode, clickBuffer,
     updateDelayNode, 1);
+
+  console.log("Creating recorder");
+  const recordingNode = new MediaStreamAudioDestinationNode(audioContext);
+  channelSplitterNode.connect(recordingNode, 0);
+  const downloadButton = document.getElementById("downloadButton");
+  recorder = new Recorder(recordingNode.stream, downloadButton);
+  recorder.start();
+
+  document.getElementById("stopButton").disabled = false;
 }
 
 function updateDelayNode(networkLatency)
