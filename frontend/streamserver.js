@@ -113,37 +113,34 @@ async function receiveOfferMessage(data)
 
   clientId = data.from;
   
-  console.log("Received offer from %s.", clientId)
-  console.log(data.offer);
+  console.log("Received offer %o from %s.", data.offer, clientId)
 
-  console.log("Creating RTC connection");
-  connection[clientId] = new RTCPeerConnection({iceServers: [{urls:
-    stunServerUrl}]});
+  connection[clientId] = new RTCPeerConnection({iceServers: [{urls: stunServerUrl}]});
 
   connection[clientId].onicecandidate = function (event)
-  {
-    if (event.candidate)
-    {
-      console.log("Sending ICE candidate %o to %s", event.candidate, clientId);
-      signal({iceCandidate: event.candidate, to: clientId});
-    }  
-  };
+                                        {
+                                          if (event.candidate)
+                                          {
+                                            console.log("Sending ICE candidate %o to %s", event.candidate, clientId);
+                                            signal({iceCandidate: event.candidate, to: clientId});
+                                          }  
+                                        };
 
   connection[clientId].onaddstream = gotRemoteStream;
 
   connection[clientId].onconnectionstatechange = function (event)
-  {
-    console.log("State of connection with %s: %s.",
-      clientId,
-      connection[clientId].connectionState);
-  }
+                                                 {
+                                                   console.log("State of connection with %s: %s.",
+                                                     clientId,
+                                                     connection[clientId].connectionState);
+                                                 }
 
-  console.log("Sending output to client %s.", clientId);
-  connection[clientId].addStream(clientOutputNode.stream);
-
-  await connection[clientId].setRemoteDescription(data.offer);
+  // Sending output to client
+                      connection[clientId].addStream(clientOutputNode.stream);
+                await connection[clientId].setRemoteDescription(data.offer);
   description = await connection[clientId].createAnswer();
-  await connection[clientId].setLocalDescription(description);
+                await connection[clientId].setLocalDescription(description);
+
   console.log("Sending answer %o to %s.", description, clientId);
   signal({answer: description, to: clientId});
 }
@@ -151,35 +148,30 @@ async function receiveOfferMessage(data)
 function receiveIceCandidateMessage(data)
 {
   const clientId = data.from;
-  console.log("Received ICE candidate %o from %s.",
-    data.iceCandidate, clientId);
+  console.log("Received ICE candidate %o from %s.", data.iceCandidate, clientId);
   connection[clientId].addIceCandidate(data.iceCandidate);
 }
 
 function gotRemoteStream(event)
 {
-  var mediaStream, clientInputNode, channelSplitterNode, clientGainNode;
-
   console.log("Got remote media stream.")
-  mediaStream = event.stream;
 
-  console.log("Creating client input node.")
-  clientInputNode = new MediaStreamAudioSourceNode(audioContext, {mediaStream});
+  const mediaStream = event.stream;
 
-  console.log("Creating channel splitter node.")
-  channelSplitterNode = new ChannelSplitterNode(audioContext, {numberOfOutputs: 2});
-  clientInputNode.connect(channelSplitterNode);
+  const clientInputNode     = new MediaStreamAudioSourceNode(audioContext, {mediaStream:     mediaStream});
+  const channelSplitterNode = new ChannelSplitterNode       (audioContext, {numberOfOutputs: 2          });
+  const clientGainNode      = new GainNode                  (audioContext, {gain:            0          });
+
+  clientInputNode    .connect(channelSplitterNode);
   channelSplitterNode.connect(channelMergerNode, 1, 1);
+  channelSplitterNode.connect(clientGainNode, 0);
+  clientGainNode     .connect(gainNode);
 
-  console.log("Creating client gain node.")
-  clientGainNode = new GainNode(audioContext, {gain: 0});
   clientGainNode.gain.setValueAtTime(0, audioContext.currentTime + 0.5);
   clientGainNode.gain.linearRampToValueAtTime(1, audioContext.currentTime + 1);
-  channelSplitterNode.connect(clientGainNode, 0);
-  clientGainNode.connect(gainNode);
   // This is to get rid of the initial "click" when new clients connect.
   // New clients will be silenced for 0.5 seconds, then brought to full volume
-  // for another 0.5 seconds.
+  // for another 0.5 seconds. Does not really work. :-(
 }
 
 function signal(message)
@@ -190,12 +182,11 @@ function signal(message)
 
 async function loadAudioBuffer(url)
 {
-  var response, audioData, buffer;
-
   console.log("Loading audio data from %s.", url);
-  response = await fetch(url);
-  audioData = await response.arrayBuffer();
-  buffer = await audioContext.decodeAudioData(audioData);
-  console.log("Loaded audio data from %s.", url);  
+
+  const response  = await fetch(url);
+  const audioData = await response.arrayBuffer();
+  const buffer    = await audioContext.decodeAudioData(audioData);
+
   return buffer;
 }
