@@ -17,52 +17,44 @@ function initDocument()
 
 async function startServer()
 {
-  var metronome, clickBuffer, loopLength, loopBeats, tempo, metronomeGain;
+  var metronome, loopLength, loopBeats, tempo, metronomeGain;
 
-  sampleRate = document.getElementById("sampleRate").value * 1;
-  document.getElementById("sampleRate").disabled = true;
-  console.log("Sample rate: %.0f Hz.", sampleRate);
-
-  tempo      = document.getElementById("tempo").value * 1;
-  loopBeats  = document.getElementById("loopBeats").value * 1;
-  loopLength = 60/tempo*loopBeats; // Theoretical loop lengh, but
-  loopLength = Math.round(loopLength*sampleRate/128)*128/sampleRate;
-  tempo      = 60/loopLength*loopBeats;
-  // according to the Web Audio API specification, "If DelayNode is part of a
-  // cycle, then the value of the delayTime attribute is clamped to a minimum
-  // of one render quantum."  We do this explicitly here so we can sync the
-  // metronome.
-  document.getElementById("loopBeats").disabled = true;
-  document.getElementById("tempo").disabled = true;
-  console.log("Loop lengh is %.5f s, tempos is %.1f bpm.", loopLength, tempo);
-
-  loopGain = document.getElementById("loopGain").value;
-  document.getElementById("loopGain").disabled = true;
-
-  metronomeGain = document.getElementById("metronomeGain").value;
-  document.getElementById("metronomeGain").disabled = true;
-
+  // Update UI
+  document.getElementById("sampleRate")       .disabled = true;
+  document.getElementById("loopBeats")        .disabled = true;
+  document.getElementById("tempo")            .disabled = true;
+  document.getElementById("loopGain")         .disabled = true;
+  document.getElementById("metronomeGain")    .disabled = true;
   document.getElementById("startServerButton").disabled = true;
 
-  console.log("Creating audio context.");
-  audioContext = new AudioContext({sampleRate});
+  // Get user input
+  sampleRate    = document.getElementById("sampleRate")   .value;
+  loopGain      = document.getElementById("loopGain")     .value;
+  metronomeGain = document.getElementById("metronomeGain").value;
+  tempo         = document.getElementById("tempo")        .value;
+  loopBeats     = document.getElementById("loopBeats")    .value;
 
-  console.log("Creating gain node.");
-  gainNode = new GainNode(audioContext, {gain: loopGain});
+  // Adjust loop length and tempo according to the Web Audio API specification:
+  // "If DelayNode is part of a cycle, then the value of the delayTime
+  // attribute is clamped to a minimum of one render quantum."  We do this
+  // explicitly here so we can sync the metronome.
+  loopLength = 60/tempo*loopBeats;
+  loopLength = Math.round(loopLength*sampleRate/128)*128/sampleRate;
+  tempo      = 60/loopLength*loopBeats;
+  console.log("Loop lengh is %.5f s, tempos is %.1f bpm.", loopLength, tempo);
 
-  console.log("Creating delay node.");
-  delayNode = new DelayNode(audioContext, {
-    delayTime:    loopLength,
-    maxDelayTime: loopLength});
-  gainNode.connect(delayNode);
-  delayNode.connect(gainNode);
 
-  console.log("Creating channel merger node.");
+  console.log("Creating Web Audio.");
+  audioContext      = new AudioContext({sampleRate});
+  gainNode          = new GainNode(audioContext, {gain: loopGain});
+  delayNode         = new DelayNode(audioContext, {delayTime:    loopLength,
+                                                   maxDelayTime: loopLength});
   channelMergerNode = new ChannelMergerNode(audioContext, {numberOfInputs: 2});
-  gainNode.connect(channelMergerNode, 0, 0);
-
-  console.log("Creating client output node.");
-  clientOutputNode = new MediaStreamAudioDestinationNode(audioContext);
+  clientOutputNode  = new MediaStreamAudioDestinationNode(audioContext);
+  
+  gainNode         .connect(delayNode);
+  delayNode        .connect(gainNode);
+  gainNode         .connect(channelMergerNode, 0, 0);
   channelMergerNode.connect(clientOutputNode);
 
 /*
@@ -85,15 +77,14 @@ SERVER           V                                  |
                                                   *created on demand
 */
 
-  clickBuffer = await loadAudioBuffer("snd/CYCdh_K1close_ClHat-07.wav");
-  console.log("Starting metronome.")
+  const clickBuffer = await loadAudioBuffer("snd/CYCdh_K1close_ClHat-07.wav");
   metronome = new Metronome(audioContext, channelMergerNode, tempo,
     clickBuffer, 0, metronomeGain);
   metronome.start();
 
   console.log("Creating connection to signaling server.");
   signalingChannel = new WebSocket(signalingServerUrl)
-  signalingChannel.onmessage         = receiveMessage;
+  signalingChannel.onmessage = receiveMessage;
 
   console.log("Waiting for offers.")
 }
@@ -167,7 +158,7 @@ async function receiveOfferMessage(data)
 async function receiveIceCandidateMessage(data)
 {
   const clientId = data.from;
-  
+
   console.log("Received ICE candidate.");
   console.log(data.iceCandidate);
 
