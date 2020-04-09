@@ -20,7 +20,7 @@ function initDocument()
 {
   console.log("Adding event handlers to DOM.")
   document.getElementById("startButton").onclick = startStream;
-  document.getElementById("stopButton").onclick = () => recorder.stop();
+  document.getElementById("stopButton").onclick = stopStream;
 }
 
 /*                                               * created in gotRemoteStream
@@ -246,4 +246,12 @@ async function loadAudioBuffer(url)
   buffer = await audioContext.decodeAudioData(audioData);
   console.log("Loaded audio data from %s.", url);  
   return buffer;
+}
+
+function stopStream()
+{
+  document.getElementById("stopButton").disabled = true;
+  console.log("Leaving the session");
+  recorder.stop();
+  connection.close();
 }
