@@ -124,8 +124,7 @@ async function receiveOfferMessage(data)
   {
     if (event.candidate)
     {
-      console.log("Sending ICE candidate to signaling server");
-      console.log(event.candidate);
+      console.log("Sending ICE candidate %o to %s", event.candidate, clientId);
       signal({iceCandidate: event.candidate, to: clientId});
     }  
   };
@@ -134,37 +133,27 @@ async function receiveOfferMessage(data)
 
   connection[clientId].onconnectionstatechange = function (event)
   {
-    console.log("Connection state: %s.", connection[clientId].connectionState);
+    console.log("State of connection with %s: %s.",
+      clientId,
+      connection[clientId].connectionState);
   }
 
-  console.log("Sending output to client.");
+  console.log("Sending output to client %s.", clientId);
   connection[clientId].addStream(clientOutputNode.stream);
 
-  console.log("Setting remote description.");
   await connection[clientId].setRemoteDescription(data.offer);
-  console.log("Remote description set.");
-
-  console.log("Creating answer.");
   description = await connection[clientId].createAnswer();
-
-  console.log("Setting local description.")
   await connection[clientId].setLocalDescription(description);
-  console.log("Local description set.");
-
-  console.log("Sending answer.")
+  console.log("Sending answer %o to %s.", description, clientId);
   signal({answer: description, to: clientId});
 }
 
-async function receiveIceCandidateMessage(data)
+function receiveIceCandidateMessage(data)
 {
   const clientId = data.from;
-
-  console.log("Received ICE candidate.");
-  console.log(data.iceCandidate);
-
-  console.log("Adding ICE candidate to connection.");
-  await connection[clientId].addIceCandidate(data.iceCandidate);
-  console.log("ICE candidate added to connection.");
+  console.log("Received ICE candidate %o from %s.",
+    data.iceCandidate, clientId);
+  connection[clientId].addIceCandidate(data.iceCandidate);
 }
 
 function gotRemoteStream(event)
