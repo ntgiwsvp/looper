@@ -3,7 +3,7 @@
 import Metronome from "./metronome.js";
 
 var signalingChannel, ownId; // for Websocket 
-var connection; // For RTC
+var connection = []; // For RTC
 var audioContext, clientOutputNode, gainNode, delayNode, channelMergerNode,
   sampleRate, loopGain; // for Web Audio API
 
@@ -98,11 +98,6 @@ SERVER           V                                  |
   console.log("Waiting for offers.")
 }
 
-function reportConnectionState(event)
-{
-  console.log("Connection state: %s.", connection.connectionState)
-}
-
 function receiveMessage(message)
 {
   var data;
@@ -131,8 +126,10 @@ async function receiveOfferMessage(data)
   console.log(data.offer);
 
   console.log("Creating RTC connection");
-  connection  = new RTCPeerConnection({iceServers: [{urls: stunServerUrl}]});
-  connection.onicecandidate = function (event)
+  connection[clientId] = new RTCPeerConnection({iceServers: [{urls:
+    stunServerUrl}]});
+
+  connection[clientId].onicecandidate = function (event)
   {
     if (event.candidate)
     {
@@ -141,21 +138,26 @@ async function receiveOfferMessage(data)
       signal({iceCandidate: event.candidate, to: clientId});
     }  
   };
-  connection.onaddstream             = gotRemoteStream;
-  connection.onconnectionstatechange = reportConnectionState;
-  
+
+  connection[clientId].onaddstream = gotRemoteStream;
+
+  connection[clientId].onconnectionstatechange = function (event)
+  {
+    console.log("Connection state: %s.", connection[clientId].connectionState);
+  }
+
   console.log("Sending output to client.");
-  connection.addStream(clientOutputNode.stream);
+  connection[clientId].addStream(clientOutputNode.stream);
 
   console.log("Setting remote description.");
-  await connection.setRemoteDescription(data.offer);
+  await connection[clientId].setRemoteDescription(data.offer);
   console.log("Remote description set.");
 
   console.log("Creating answer.");
-  description = await connection.createAnswer();
+  description = await connection[clientId].createAnswer();
 
   console.log("Setting local description.")
-  await connection.setLocalDescription(description);
+  await connection[clientId].setLocalDescription(description);
   console.log("Local description set.");
 
   console.log("Sending answer.")
@@ -164,11 +166,13 @@ async function receiveOfferMessage(data)
 
 async function receiveIceCandidateMessage(data)
 {
+  const clientId = data.from;
+  
   console.log("Received ICE candidate.");
   console.log(data.iceCandidate);
 
   console.log("Adding ICE candidate to connection.");
-  await connection.addIceCandidate(data.iceCandidate);
+  await connection[clientId].addIceCandidate(data.iceCandidate);
   console.log("ICE candidate added to connection.");
 }
 
