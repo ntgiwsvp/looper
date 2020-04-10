@@ -15,14 +15,14 @@ just a browser?  In this setup, ultra-low latencies cannot be achieved.  The
 workaround chosen here is to play in a loop setting, similar to populer looper
 guitar effects pedals:  This allows to hide latency up to the loop lenght.
 
-# How to try
+## How to try
 
 There is a hosted version running at
 https://looperfrontend.z6.web.core.windows.net/index.html.  Direct your
 browser there and follow the intructions.  Note that this currently only works
 with Firefox (https://github.com/ntgiwsvp/looper/issues/2).
 
-# How to have your own
+## How to have your own
 
 To get started to experiment with the code, proceed as follows:
 
@@ -38,7 +38,7 @@ This will allow you to play with the frontend code, but will still use the
 hosted version of the signaling server.  If you want to play with the signaling
 server, you need to adjust frontend/constants.js accordingly.
 
-# How to contribute
+## How to contribute
 
 You can contribute in many ways should you wish to do so, such as
 
