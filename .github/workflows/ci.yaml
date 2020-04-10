@@ -11,3 +11,12 @@ jobs:
       working-directory: webserver
     - run: ./test
       working-directory: webserver
+
+  signalingserver:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - run: ./build
+      working-directory: signalingserver
+    - run: ./test
+      working-directory: signalingserver
