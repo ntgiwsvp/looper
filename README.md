@@ -50,4 +50,6 @@ You can contribute in many ways should you wish to do so, such as
 
 I am very open to any form of contribution.  Just contact me at tbliem@gmx.de
 for any comments or inquiries.  Please note this is a hobby project and it might
-take me a couple of days to reply.
+take me a couple of days to reply.  To contribute code, proceed as described on
+https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request-from-a-fork
+or contact me via email to be added as a collaborator here.
