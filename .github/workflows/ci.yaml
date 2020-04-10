@@ -1,12 +1,6 @@
 # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions
 
-on:
-  push:
-    branches:
-    - master
-  pull_request:
-    branches:
-    - master
+on: push
 
 jobs:
   webserver:
