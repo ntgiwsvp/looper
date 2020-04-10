@@ -1,0 +1,8 @@
+#!/bin/sh
+
+node app.js &
+sleep 1
+node test.js
+EXITCODE=$?
+kill $!
+exit $EXITCODE
