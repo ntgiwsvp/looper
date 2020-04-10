@@ -7,7 +7,7 @@ One big challenge here is latency, which makes it impossible to play in sync
 if latency is too high.  The nice solution for this is to build a low-latency
 system, the approach followed e.g. on https://github.com/delude88/digitalstage.
 (See the nice explanations on http://digital-stage.org/?page_id=51, the ambition
-for the most advanced version is to have a end-to-end lateny of 30 ms.
+for the most advanced version is to have a end-to-end lateny of 30 ms.)
 
 This project follows more a low-barrier approach:  How can be hobby musicians
 be enabled to play together and have fun, using their commodity hardware and
