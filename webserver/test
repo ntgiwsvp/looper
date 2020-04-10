@@ -1,0 +1,8 @@
+#!/bin/sh
+
+node webserver.js &
+sleep 1
+curl --cacert ca.crt https://127.0.0.1:4300
+EXITCODE=$?
+kill $!
+exit $EXITCODE
