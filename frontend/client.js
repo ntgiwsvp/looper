@@ -28,18 +28,15 @@ function initDocument()
 USER                        |                  A
 ----------------------------+------------------+------------------------------
 CLIENT                      |                  |
-                            |             destination
-                            |                  A
-                            |                  +---------> recordingNode*
                             V                  |
-                     userInputNode             |          scriptProcessor*
-                            |                  |                 A
-                            V                  |                 |
-                       delay Node              |            convolverNode*
-                            |                  | 0               A
-            1               V 0                |                 |
-metronome -----> channelMergerNode     channelSplitterNode* -----+
-                            |                  A              1
+                     userInputNode        destination
+                            |                  A
+                            V                  |
+                       delay Node              +---------> recordingNode*
+                            |                  |
+               1            V 0                | 0          1
+metronome -----> channelMergerNode     channelSplitterNode* ----> correlator*
+                            |                  A
                             V                  |
                     serverOutputNode    serverInputNode*
 CLIENT                      |                  A
