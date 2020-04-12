@@ -4,6 +4,7 @@ import Metronome from "./metronome.js";
 import Correlator from "./correlator.js";
 import Recorder from "./recorder.js";
 import {signalingServerUrl, stunServerUrl} from "./constants.js";
+import "https://webrtc.github.io/adapter/adapter-latest.js"
 
 var signalingChannel, ownId, sessionId; // for Websocket
 var connection; // for RTC

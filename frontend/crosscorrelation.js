@@ -2,6 +2,7 @@
 
 import Metronome from "./metronome.js";
 import Correlator from "./correlator.js";
+import "https://webrtc.github.io/adapter/adapter-latest.js"
 
 var audioContext, sampleRate; // for Web Audio API
 
