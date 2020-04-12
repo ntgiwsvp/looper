@@ -6,7 +6,7 @@
   </head>
 
   <body>
-    <h1>Looper</h1>
+    <h1>looper - make music together online in a loop</h1>
     <p>
       This is a tool for making music together in times of quarantine.
       Still work in progress.  To try anyway (no guarantees!), proceed as
@@ -15,27 +15,28 @@
     <p>Notes/recommendations</p>
     <ul>
       <li>
-        At each page you will have to select the sample rate.  48000 Hz is
-        the only one that really makes sense here, since 44100 Hz is not
-        supported by the Opus codec (RFC 7587).  However it seems some systems
-        have the recording rate set to 44100 Hz by default, you have to choose
-        44100 Hz on those (or proceed as indicated in the next bullet point.)
+        Error signaling is still mostly via the developer console.  Enter
+        Ctrl + Shift + K on each page to open it and keep it open.
       </li>
       <li>
-        On Ubuntu, it can happen that the default sample rate is 44100 Hz.
-        In this case, you are encouraged to switch to 48000 Hz by
-        adding the line "default-sample-rate = 48000" to /etc/pulse/daemon.conf.
-        (Remove the initial "; " if present.) 
+        At each page you will have to select the sample rate.  It seems systems
+        are picky about which sample rate to work with and most of them
+        like to work at 44100 Hz, so this is the default setting.
+        If you observe the error message "Connecting AudioNodes from
+        AudioContexts with different sample-rate is currently not supported,"
+        you have an issue with the sample rate.  Try 48000 Hz in this case!
+      </li>
+      <li>
+        48000 Hz makes actually more sense, since 44100 Hz is not
+        supported by the Opus codec (RFC 7587).  On Ubuntu, you can switch to
+        48000 Hz by adding the line "default-sample-rate = 48000" to
+        /etc/pulse/daemon.conf.  (Remove the initial "; " if present.)
       </li>
       <li>
         In any case the sample rate for the session and all clients must match.
       </li>
       <li>
         This only works with Firefox at the moment.
-      </li>
-      <li>
-        Error signaling is still mostly via the developer console.  Enter
-        Ctrl + Shift + K on each page to open it and keep it open.
       </li>
     </ul>
     <p>
