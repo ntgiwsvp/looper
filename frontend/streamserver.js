@@ -128,7 +128,7 @@ async function receiveOfferMessage(data)
                                           }  
                                         };
 
-  connection[clientId].onaddstream = gotRemoteStream;
+  connection[clientId].ontrack = gotRemoteStream;
 
   connection[clientId].onconnectionstatechange = function ()
                                                  {
@@ -138,7 +138,8 @@ async function receiveOfferMessage(data)
                                                  }
 
   // Sending output to client
-                      connection[clientId].addStream(clientOutputNode.stream);
+                      connection[clientId].addTrack(clientOutputNode.stream.getAudioTracks()[0], 
+                                                    clientOutputNode.stream);
                 await connection[clientId].setRemoteDescription(data.offer);
   description = await connection[clientId].createAnswer();
                 await connection[clientId].setLocalDescription(description);
@@ -158,7 +159,8 @@ function gotRemoteStream(event)
 {
   console.log("Got remote media stream.")
 
-  const mediaStream = event.stream;
+  const mediaStream = event.streams[0];
+  //const mediaStreamTrack = event.track;
 
   const clientInputNode     = new MediaStreamAudioSourceNode(audioContext, {mediaStream:     mediaStream});
   const channelSplitterNode = new ChannelSplitterNode       (audioContext, {numberOfOutputs: 2          });

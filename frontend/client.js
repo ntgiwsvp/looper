@@ -92,7 +92,7 @@ async function continueSetup()
   console.log("Creating RTC connection.")
   connection = new RTCPeerConnection({iceServers: [{urls: stunServerUrl}]});
   connection.onicecandidate          = sendIceCandidate;
-  connection.onaddstream             = gotRemoteStream;
+  connection.ontrack                 = gotRemoteStream;
   connection.onconnectionstatechange = reportConnectionState;
 
   console.log("Getting user media.");
@@ -122,7 +122,8 @@ async function continueSetup()
   channelMergerNode.connect(serverOutputNode);
 
   console.log("Adding stream to connection.");
-  connection.addStream(serverOutputNode.stream);
+  connection.addTrack(serverOutputNode.stream.getAudioTracks()[0],
+                      serverOutputNode.stream);
 
   console.log("Creating offer.")
   description = await connection.createOffer({voiceActivityDetection: false});
@@ -193,7 +194,8 @@ function gotRemoteStream(event)
   var mediaStream, serverInputNode, channelSplitterNode;
 
   console.log("Got remote media stream.")
-  mediaStream = event.stream;
+  mediaStream = event.streams[0];
+  //const mediaStreamTrack = event.track;
 
   console.log("Creating server input node.")
   serverInputNode = new MediaStreamAudioSourceNode(audioContext, {mediaStream});
