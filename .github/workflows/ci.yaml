@@ -32,3 +32,12 @@ jobs:
     - name: Execute test
       run: ./test
       working-directory: signalingserver
+
+  frontend:
+    runs-on: ubunto-latest
+    steps:
+    - name: Get code
+      uses: actions/checkout@v2
+    - name: Check JavaScript code
+      run: npx eslint *.js
+      working-directory: frontend
