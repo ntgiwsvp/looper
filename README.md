@@ -9,7 +9,7 @@ system, the approach followed e.g. on https://github.com/delude88/digitalstage.
 (See the nice explanations on http://digital-stage.org/?page_id=51, the ambition
 for the most advanced version is to have a end-to-end lateny of 30 ms.)
 
-This project follows more a low-barrier approach:  How can be hobby musicians
+This project follows more a low-barrier approach:  How can hobby musicians
 be enabled to play together and have fun, using their commodity hardware and
 just a browser?  In this setup, ultra-low latencies cannot be achieved.  The
 workaround chosen here is to play in a loop setting, similar to populer looper
@@ -19,7 +19,7 @@ guitar effects pedals:  This allows to hide latency up to the loop lenght.
 
 There is a hosted version running at
 https://looperfrontend.z6.web.core.windows.net/index.html.  Direct your
-browser there and follow the intructions.  Note that this currently only works
+browser there and follow the instructions.  Note that this currently only works
 with Firefox (https://github.com/ntgiwsvp/looper/issues/2).
 
 ## How to have your own
@@ -48,7 +48,7 @@ You can contribute in many ways should you wish to do so, such as
   * Add feature suggestions.  (Just use GitHub's issues page as linked above.)
   * Enjoy.
 
-I am very open to any form of contribution.  Just contact me at tbliem@gmx.de
+I am very open to any form of collaboration.  Just contact me at tbliem@gmx.de
 for any comments or inquiries.  Please note this is a hobby project and it might
 take me a couple of days to reply.  To contribute code, proceed as described on
 https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request-from-a-fork
