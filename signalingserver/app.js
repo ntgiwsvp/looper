@@ -25,7 +25,7 @@ function dummyStatusMessage(request, response)
   response.end("Signaling server is running.");
 }
 
-function initializeConnection(socket, request)
+function initializeConnection(socket)
 {
   var clientId;
 
