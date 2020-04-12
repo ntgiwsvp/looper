@@ -6,19 +6,26 @@ jobs:
   webserver:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - run: ./build
+    - name: Get code
+      uses: actions/checkout@v2
+    - name: Install node packages and create CA certificate
+      run: ./build
       working-directory: webserver
-    - run: npx eslint webserver.js
+    - name: Check JavaScript code
+      run: npx eslint webserver.js
       working-directory: webserver
-    - run: ./test
+    - name: Execute test
+      run: ./test
       working-directory: webserver
 
   signalingserver:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - run: ./build
+    - name: Get code
+      uses: actions/checkout@v2
+    - name: Install node packages
+      run: ./build
       working-directory: signalingserver
-    - run: ./test
+    - name: Execute test
+      run: ./test
       working-directory: signalingserver
