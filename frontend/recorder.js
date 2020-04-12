@@ -11,7 +11,7 @@ export default class Recorder
       chunks.push(event.data);
     }
     
-    this.recorder.onstop = function(event)
+    this.recorder.onstop = function()
     {
       var blob;
 

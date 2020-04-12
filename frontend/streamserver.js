@@ -1,6 +1,7 @@
 "use strict";
 
 import Metronome from "./metronome.js";
+import {signalingServerUrl, stunServerUrl} from "./constants.js";
 
 var signalingChannel, ownId; // for Websocket 
 var connection = []; // For RTC
@@ -128,7 +129,7 @@ async function receiveOfferMessage(data)
 
   connection[clientId].onaddstream = gotRemoteStream;
 
-  connection[clientId].onconnectionstatechange = function (event)
+  connection[clientId].onconnectionstatechange = function ()
                                                  {
                                                    console.log("State of connection with %s: %s.",
                                                      clientId,

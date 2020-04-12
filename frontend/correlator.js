@@ -49,7 +49,7 @@ function processAudio(event)
 {
   var array, i, networkLatency, bufferSize, bufferDuration;
   var startSecond, endSecond, boundarySample, currentPlaybackTime;
-  var playbackTimeAdjustment, totalLatency;
+  var playbackTimeAdjustment;
 
   array          = event.inputBuffer.getChannelData(0);
   bufferSize     = event.inputBuffer.length;
@@ -57,7 +57,7 @@ function processAudio(event)
   startSecond    = Math.floor(event.playbackTime);
   endSecond      = Math.floor(event.playbackTime + bufferDuration);
 
-  if (!max) {max = argmax = -1};
+  if (!max) max = argmax = -1;
 
   // Dirty trick
   currentPlaybackTime = Math.round(event.playbackTime*sampleRate) % 16384;
