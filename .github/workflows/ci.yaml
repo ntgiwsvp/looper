@@ -26,6 +26,9 @@ jobs:
     - name: Install node packages
       run: ./build
       working-directory: signalingserver
+    - name: Check JavaScript code
+      run: npx eslint app.js
+      working-directory: signalingserver
     - name: Execute test
       run: ./test
       working-directory: signalingserver
