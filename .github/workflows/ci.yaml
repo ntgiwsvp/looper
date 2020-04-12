@@ -34,7 +34,7 @@ jobs:
       working-directory: signalingserver
 
   frontend:
-    runs-on: ubunto-latest
+    runs-on: ubuntu-latest
     steps:
     - name: Get code
       uses: actions/checkout@v2
