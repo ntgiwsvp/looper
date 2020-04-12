@@ -2,6 +2,7 @@
 
 import Metronome from "./metronome.js";
 import {signalingServerUrl, stunServerUrl} from "./constants.js";
+import "https://webrtc.github.io/adapter/adapter-latest.js"
 
 var signalingChannel, ownId; // for Websocket 
 var connection = []; // For RTC
