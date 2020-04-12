@@ -9,6 +9,8 @@ jobs:
     - uses: actions/checkout@v2
     - run: ./build
       working-directory: webserver
+    - run: npx eslint webserver.js
+      working-directory: webserver
     - run: ./test
       working-directory: webserver
 
