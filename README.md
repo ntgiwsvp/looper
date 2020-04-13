@@ -27,8 +27,6 @@ with Firefox (https://github.com/ntgiwsvp/looper/issues/2).
 To get started to experiment with the code, proceed as follows:
 
   * git clone https://github.com/ntgiwsvp/looper.git
-  * Follow the instructions in frontend/snd/README.md to download the metronome
-    click sound.
   * In folder webserver, run "build"
   * Add the file ca.crt to your browser's trusted certificates.
   * Run "node webserver.js"
