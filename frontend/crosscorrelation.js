@@ -33,7 +33,7 @@ async function start()
   audioContext = new AudioContext({sampleRate});
 
   // metronome and input node
-  clickBuffer = await loadAudioBuffer("snd/CYCdh_K1close_ClHat-07.wav");
+  clickBuffer = await loadAudioBuffer("snd/Closed_Hat.wav");
   clickBufferDuration = clickBuffer.duration;
   console.log("click buffer duration: %.1f ms.", 1000*clickBufferDuration);
 

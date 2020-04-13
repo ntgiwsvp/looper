@@ -115,7 +115,7 @@ async function continueSetup()
   delayNode.connect(channelMergerNode, 0, 0);
 
   console.log("Creating metronome.")
-  clickBuffer = await loadAudioBuffer("snd/CYCdh_K1close_ClHat-07.wav");
+  clickBuffer = await loadAudioBuffer("snd/Closed_Hat.wav");
   metronome = new Metronome(audioContext, channelMergerNode, 60, clickBuffer, 1);
   metronome.start(-1);
 

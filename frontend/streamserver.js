@@ -79,7 +79,7 @@ SERVER           V                                  |
                                                   *created on demand
 */
 
-  const clickBuffer = await loadAudioBuffer("snd/CYCdh_K1close_ClHat-07.wav");
+  const clickBuffer = await loadAudioBuffer("snd/Closed_Hat.wav");
   metronome = new Metronome(audioContext, channelMergerNode, tempo,
     clickBuffer, 0, metronomeGain);
   metronome.start();
