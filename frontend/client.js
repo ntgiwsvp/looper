@@ -101,6 +101,8 @@ async function continueSetup()
     noiseSuppression: false,
     channelCount:     1}});
 
+  // TODO: Assign handler to userInptStream.oninactive
+  
   console.log("Creating user input node.");
   userInputNode = new MediaStreamAudioSourceNode(audioContext, {mediaStream: userInputStream});
 
