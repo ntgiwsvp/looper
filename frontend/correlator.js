@@ -98,7 +98,6 @@ function processAudio(event)
       argmax = frac(event.playbackTime + i/sampleRate);
       max = array[i];
     }
-
   }
 }
 
