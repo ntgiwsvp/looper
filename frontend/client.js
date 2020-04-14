@@ -199,6 +199,9 @@ function gotRemoteStream(event)
   mediaStream = event.streams[0];
   //const mediaStreamTrack = event.track;
 
+  // Workaround for Chrome from https://stackoverflow.com/a/54781147
+  new Audio().srcObject = mediaStream;
+
   console.log("Creating server input node.")
   serverInputNode = new MediaStreamAudioSourceNode(audioContext, {mediaStream});
 

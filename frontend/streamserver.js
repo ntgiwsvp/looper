@@ -162,6 +162,9 @@ function gotRemoteStream(event)
   const mediaStream = event.streams[0];
   //const mediaStreamTrack = event.track;
 
+  // Workaround for Chrome from https://stackoverflow.com/a/54781147
+  new Audio().srcObject = mediaStream;
+
   const clientInputNode     = new MediaStreamAudioSourceNode(audioContext, {mediaStream:     mediaStream});
   const channelSplitterNode = new ChannelSplitterNode       (audioContext, {numberOfOutputs: 2          });
   const clientGainNode      = new GainNode                  (audioContext, {gain:            0          });
