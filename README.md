@@ -19,8 +19,8 @@ guitar effects pedals:  This allows to hide latency up to the loop lenght.
 
 There is a hosted version running at
 https://looperfrontend.z6.web.core.windows.net/index.html.  Direct your
-browser there and follow the instructions.  Note that this currently only works
-with Firefox (https://github.com/ntgiwsvp/looper/issues/2).
+browser there and follow the instructions.  Note that this is only tested
+with Firefox and Chrome.
 
 ## How to have your own
 
