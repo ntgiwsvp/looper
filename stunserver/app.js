@@ -8,7 +8,7 @@ server.listen(19302);
 
 function respond(request, rinfo)
 {
-  console.log("Responding to request from %s:%d.", rinfo.address, rinfo, port);
+  console.log("Responding to request from %s:%d.", rinfo.address, rinfo.port);
 
   const response = stun.createMessage(stun.constants.STUN_BINDING_RESPONSE,
     request.transactionId);
