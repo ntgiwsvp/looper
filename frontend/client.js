@@ -129,7 +129,7 @@ async function continueSetup()
 
   console.log("Creating offer.")
   description = await connection.createOffer({voiceActivityDetection: false});
-  console.log("Created offer.");
+  console.log("Offer SDP:\n%s", description.sdp)
 
   console.log("Setting local description.");
   await connection.setLocalDescription(description);
