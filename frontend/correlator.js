@@ -86,8 +86,7 @@ function processAudio(event)
     // Perform calculation
     networkLatency = frac(argmax - clickBufferDuration - bufferDuration
       - (playbackTimeAdjustment - 1)/sampleRate);
-    if (networkLatency > 0.95) networkLatency -= 1; // underflow should not
-      // happen, but just in case :-)
+    if (networkLatency > 16384/sampleRate) networkLatency -= 16384/sampleRate;
 
     callBackFunction(networkLatency);
 
