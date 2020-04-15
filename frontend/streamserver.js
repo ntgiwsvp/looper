@@ -138,13 +138,15 @@ async function receiveOfferMessage(data)
                                                  }
 
   // Sending output to client
-                      connection[clientId].addTrack(clientOutputNode.stream.getAudioTracks()[0], 
-                                                    clientOutputNode.stream);
-                await connection[clientId].setRemoteDescription(data.offer);
+  connection[clientId].addTrack(clientOutputNode.stream.getAudioTracks()[0], 
+                                clientOutputNode.stream);
+  await connection[clientId].setRemoteDescription(data.offer);
   description = await connection[clientId].createAnswer();
-                await connection[clientId].setLocalDescription(description);
-
-  console.log("Sending answer %o to %s.", description, clientId);
+  description.sdp = description.sdp.replace("minptime=10",
+    "minptime=10;stereo=1;sprop-stereo=1"); // For Chrome, see
+    // https://bugs.chromium.org/p/webrtc/issues/detail?id=8133#c25
+  console.log("Answer SDP:\n%s", description.sdp)
+  await connection[clientId].setLocalDescription(description);
   signal({answer: description, to: clientId});
 }
 
