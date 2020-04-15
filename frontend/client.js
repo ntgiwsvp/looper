@@ -129,6 +129,9 @@ async function continueSetup()
 
   console.log("Creating offer.")
   description = await connection.createOffer({voiceActivityDetection: false});
+  description.sdp = description.sdp.replace("minptime=10",
+    "minptime=10;stereo=1;sprop-stereo=1"); // For Chrome, see
+    // https://bugs.chromium.org/p/webrtc/issues/detail?id=8133#c25
   console.log("Offer SDP:\n%s", description.sdp)
 
   console.log("Setting local description.");
