@@ -129,34 +129,13 @@ async function startStream()
   signal({offer: description, to:sessionId});
 }
 
-function receiveMessage(message)
+function receiveMessage(event)
 {
-  var data;
+  const data = JSON.parse(event.data);
 
-  data = JSON.parse(message.data);
-
-  if (data.id)           receiveIdMessage(data);
-  if (data.answer)       receiveAnswerMessage(data);
-  if (data.iceCandidate) receiveIceCandidateMessage(data);
-}
-
-function receiveIdMessage(data)
-{
-  ownId = data.id;
-  console.log("Received own ID: %d.", ownId);
-}
-
-async function receiveAnswerMessage(data)
-{
-  console.log("Answer SDP:\n%s", data.answer.sdp);
-  await connection.setRemoteDescription(data.answer);
-}
-
-async function receiveIceCandidateMessage(data)
-{
-  console.log("Received ICE candidate: %s",
-    data.iceCandidate.candidate);
-  await connection.addIceCandidate(data.iceCandidate);
+  if (data.id)           {console.log("Received own ID: %d.", data.id);                           ownId = data.id;                              }
+  if (data.answer)       {console.log("Answer SDP:\n%s", data.answer.sdp);                        connection.setRemoteDescription(data.answer); }
+  if (data.iceCandidate) {console.log("Received ICE candidate: %s", data.iceCandidate.candidate); connection.addIceCandidate(data.iceCandidate);}
 }
 
 function reportConnectionState()
@@ -180,7 +159,6 @@ function gotRemoteStream(event)
 
   console.log("Got remote media stream.")
   mediaStream = event.streams[0];
-  //const mediaStreamTrack = event.track;
 
   // Workaround for Chrome from https://stackoverflow.com/a/54781147
   new Audio().srcObject = mediaStream;
