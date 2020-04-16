@@ -20,11 +20,17 @@ document.addEventListener("DOMContentLoaded", initDocument);
 // We start by associating the event handlers to the frontend.
 function initDocument()
 {
-  console.log("Adding event handlers to DOM.")
+  // Adding event handlers to DOM
   document.getElementById("startButton").onclick = startStream;
   document.getElementById("stopButton").onclick = stopStream;
-}
 
+  // Creating connection to signaling server
+  signalingChannel = new WebSocket(signalingServerUrl);
+  signalingChannel.onmessage = receiveMessage;
+  signalingChannel.onopen = () =>
+    document.getElementById("startButton").disabled = false;
+}
+  
 /*                                               * created in gotRemoteStream
 
 USER                        |                  A
@@ -45,15 +51,8 @@ CLIENT                      |                  A
 ----------------------------+------------------+------------------------------
 SERVER                      V                  |
 */
-function startStream()
-{
-  console.log("Creating connection to signaling server.");
-  signalingChannel = new WebSocket(signalingServerUrl);
-  signalingChannel.onmessage         = receiveMessage;
-  signalingChannel.onopen            = continueSetup;
-}
 
-async function continueSetup()
+async function startStream()
 {
   var userInputStream, description, userInputNode, serverOutputNode,
     channelMergerNode, metronome, tempo, loopBeats;
