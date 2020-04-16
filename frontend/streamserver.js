@@ -13,8 +13,14 @@ document.addEventListener("DOMContentLoaded", initDocument);
 
 function initDocument()
 {
-  console.log("Adding event handlers to DOM.");
+  // Adding event handlers to DOM.
   document.getElementById("startServerButton").onclick = startServer;
+
+  // Creating connection to signaling server.
+  signalingChannel = new WebSocket(signalingServerUrl)
+  signalingChannel.onmessage = receiveMessage;
+  signalingChannel.onopen = () =>
+    document.getElementById("startServerButton").disabled = false;
 }
 
 async function startServer()
@@ -83,10 +89,6 @@ SERVER           V                                  |
   metronome = new Metronome(audioContext, channelMergerNode, tempo,
     clickBuffer, 0, metronomeGain);
   metronome.start();
-
-  console.log("Creating connection to signaling server.");
-  signalingChannel = new WebSocket(signalingServerUrl)
-  signalingChannel.onmessage = receiveMessage;
 
   console.log("Waiting for offers.")
 }
