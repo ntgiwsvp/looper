@@ -57,87 +57,75 @@ async function startStream()
   var userInputStream, description, userInputNode, serverOutputNode,
     channelMergerNode, metronome, tempo, loopBeats;
 
-  sessionId = document.getElementById("sessionId").value;
-  document.getElementById("sessionId").disabled = true;
-  console.log("Joining session %s.", sessionId);
+  // Disable UI
+  document.getElementById("sessionId")  .disabled = true;
+  document.getElementById("sampleRate") .disabled = true;
+  document.getElementById("loopBeats")  .disabled = true;
+  document.getElementById("tempo")      .disabled = true;
+  document.getElementById("latency")    .disabled = true
+  document.getElementById("startButton").disabled = true;
 
-  sampleRate = document.getElementById("sampleRate").value * 1;
-  document.getElementById("sampleRate").disabled = true;
-  console.log("Sample rate: %.0f Hz.", sampleRate);
+  // Get user input
+  sessionId   = document.getElementById("sessionId") .value;
+  sampleRate  = document.getElementById("sampleRate").value * 1;
+  tempo       = document.getElementById("tempo")     .value * 1;
+  userLatency = document.getElementById("latency")   .value / 1000;
+  loopBeats   = document.getElementById("loopBeats") .value * 1;
 
-  tempo      = document.getElementById("tempo").value * 1;
-  loopBeats  = document.getElementById("loopBeats").value * 1;
-  loopLength = 60/tempo*loopBeats; // Theoretical loop lengh, but
-  loopLength = Math.round(loopLength*sampleRate/128)*128/sampleRate;
-  tempo      = 60/loopLength*loopBeats;
+  // Calculate loop lenght
+  loopLength  = 60/tempo*loopBeats; // Theoretical loop lengh, but
+  loopLength  = Math.round(loopLength*sampleRate/128)*128/sampleRate;
+  tempo       = 60/loopLength*loopBeats;
   // according to the Web Audio API specification, "If DelayNode is part of a
   // cycle, then the value of the delayTime attribute is clamped to a minimum
   // of one render quantum."  We do this explicitly here so we can sync the
   // metronome.
-  document.getElementById("loopBeats").disabled = true;
-  document.getElementById("tempo").disabled = true;
   console.log("Loop lengh is %.5f s, tempos is %.1f bpm.", loopLength, tempo);
 
-  userLatency = document.getElementById("latency").value / 1000;
-  document.getElementById("latency").disabled = true
-  console.log("User latency is %.2f ms.", 1000*userLatency);
-
-  document.getElementById("startButton").disabled = true;
-  
-  console.log("Creating audio context.");
-  audioContext = new AudioContext({sampleRate});
-  console.log("Audio context sample rate: %f", audioContext.sampleRate);
-  
-  console.log("Creating RTC connection.")
-  connection = new RTCPeerConnection({iceServers: [{urls: stunServerUrl}]});
-  connection.onicecandidate          = sendIceCandidate;
-  connection.ontrack                 = gotRemoteStream;
-  connection.onconnectionstatechange = reportConnectionState;
-
-  console.log("Getting user media.");
+  // Getting user media
   userInputStream = await navigator.mediaDevices.getUserMedia({audio: {
     echoCancellation: false,
     noiseSuppression: false,
     channelCount:     1}});
 
-  // TODO: Assign handler to userInptStream.oninactive
-  
-  console.log("Creating user input node.");
-  userInputNode = new MediaStreamAudioSourceNode(audioContext, {mediaStream: userInputStream});
+  // TODO: Assign handler to userInputStream.oninactive
 
-  console.log("Creating delay node");
-  delayNode = new DelayNode(audioContext, {maxDelayTime: loopLength})
-  userInputNode.connect(delayNode);
-    
-  console.log("Creating channel merger node.");
-  channelMergerNode = new ChannelMergerNode(audioContext, {numberOfInputs: 2});
-  delayNode.connect(channelMergerNode, 0, 0);
+  // Create Web Audio
+  audioContext = new AudioContext({sampleRate});
 
-  console.log("Creating metronome.")
   clickBuffer = await loadAudioBuffer("snd/Closed_Hat.wav");
-  metronome = new Metronome(audioContext, channelMergerNode, 60, clickBuffer, 1);
-  metronome.start(-1);
+  
+  userInputNode     = new MediaStreamAudioSourceNode     (audioContext, {mediaStream: userInputStream});
+  delayNode         = new DelayNode                      (audioContext, {maxDelayTime: loopLength})
+  channelMergerNode = new ChannelMergerNode              (audioContext, {numberOfInputs: 2});
+  serverOutputNode  = new MediaStreamAudioDestinationNode(audioContext);
+  metronome         = new Metronome                      (audioContext, channelMergerNode, 60, clickBuffer, 1);
 
-  console.log("Creating server output node.")
-  serverOutputNode = new MediaStreamAudioDestinationNode(audioContext);
+  userInputNode    .connect(delayNode);
+  delayNode        .connect(channelMergerNode, 0, 0);
   channelMergerNode.connect(serverOutputNode);
 
-  console.log("Adding stream to connection.");
+  metronome.start(-1);
+
+  // Creating RTC connection
+  connection = new RTCPeerConnection({iceServers: [{urls: stunServerUrl}]});
+
+  connection.onicecandidate          = sendIceCandidate;
+  connection.ontrack                 = gotRemoteStream;
+  connection.onconnectionstatechange = reportConnectionState;
+
   connection.addTrack(serverOutputNode.stream.getAudioTracks()[0],
                       serverOutputNode.stream);
 
-  console.log("Creating offer.")
+  // Creating offer
   description = await connection.createOffer({voiceActivityDetection: false});
+
+  // Workaround for Chrome, see https://bugs.chromium.org/p/webrtc/issues/detail?id=8133#c25
   description.sdp = description.sdp.replace("minptime=10",
-    "minptime=10;stereo=1;sprop-stereo=1"); // For Chrome, see
-    // https://bugs.chromium.org/p/webrtc/issues/detail?id=8133#c25
+                                            "minptime=10;stereo=1;sprop-stereo=1");
+
   console.log("Offer SDP:\n%s", description.sdp)
-
-  console.log("Setting local description.");
   await connection.setLocalDescription(description);
-  console.log("Local description set.");
-
-  console.log("Sending offer.");
   signal({offer: description, to:sessionId});
 }
 
@@ -160,22 +148,15 @@ function receiveIdMessage(data)
 
 async function receiveAnswerMessage(data)
 {
-  console.log("Received answer.")
-  console.log(data.answer);
-
-  console.log("Setting remote description.")
+  console.log("Answer SDP:\n%s", data.answer.sdp);
   await connection.setRemoteDescription(data.answer);
-  console.log("Remote description set.");
 }
 
 async function receiveIceCandidateMessage(data)
 {
-  console.log("Received ICE candidate.");
-  console.log(data.iceCandidate);
-
-  console.log("Adding ICE candidate to connection.");
+  console.log("Received ICE candidate: %s",
+    data.iceCandidate.candidate);
   await connection.addIceCandidate(data.iceCandidate);
-  console.log("ICE candidate added to connection.");
 }
 
 function reportConnectionState()
@@ -187,8 +168,8 @@ function sendIceCandidate(event)
 {
   if (event.candidate)
   {
-    console.log("Sending ICE candidate to signaling server");
-    console.log(event.candidate);
+    console.log("Sending ICE candidate to signaling server: %s",
+      event.candidate.candidate);
     signal({iceCandidate: event.candidate, to: sessionId});
   }
 }
