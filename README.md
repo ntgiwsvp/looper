@@ -15,26 +15,28 @@ just a browser?  In this setup, ultra-low latencies cannot be achieved.  The
 workaround chosen here is to play in a loop setting, similar to populer looper
 guitar effects pedals:  This allows to hide latency up to the loop lenght.
 
+## Known limitations
+
+Among many others:  This is only tested with Firefox and Chrome.
+
 ## How to try
 
-There is a hosted version running at
-https://looperfrontend.z6.web.core.windows.net/index.html.  Direct your
-browser there and follow the instructions.  Note that this is only tested
-with Firefox and Chrome.
+I am currently not running a hosted version.
+See next section how to run locally.
 
 ## How to have your own
 
 To get started to experiment with the code, proceed as follows:
 
   * git clone https://github.com/ntgiwsvp/looper.git
-  * In folder webserver, run "build"
-  * Add the file ca.crt to your browser's trusted certificates.
-  * Run "node webserver.js"
+  * In folder "signalingserver":
+     * Run "npm install"
+     * Run "node app.js &"
+  * In folder webserver
+     * Run "./build"
+     * Add the file ca.crt to your browser's trusted certificates.
+     * Run "node webserver.js"
   * Navigate to https://127.0.0.1:4300/.
-
-This will allow you to play with the frontend code, but will still use the
-hosted version of the signaling server.  If you want to play with the signaling
-server, you need to adjust frontend/constants.js accordingly.
 
 ## How to contribute
 
